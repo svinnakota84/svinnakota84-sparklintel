@@ -6,7 +6,16 @@ export type LegalSectionId =
   | "vastu"
   | "privacy"
   | "terms"
-  | "global";
+  | "global"
+  | "vendors";
+
+export function VendorTerms() {
+  return <div className="space-y-3 text-sm leading-relaxed">
+    <p><strong>Furniture purchases are made directly with the vendor.</strong> Spark&amp;Lintel, operated by Radiant Spark LLC, provides design tools and links to independent businesses. For purchases made directly with a vendor, the business identified on your order or invoice is your seller. That seller sets prices, availability, payment, delivery, warranty, return and refund terms.</p>
+    <p><strong>For damage, defects or missing items, contact your seller.</strong> Keep your order number, photos of the item and packaging, and proof of delivery. Follow the seller’s claim deadlines and contact the carrier if the seller directs you to. Ask the seller about freight, duties, return costs and warranty coverage before paying.</p>
+    <p>For direct vendor purchases, Radiant Spark LLC does not collect the order payment, ship the goods, issue vendor refunds, or provide the vendor’s warranty. To the extent permitted by applicable law, Radiant Spark LLC is not responsible for a vendor’s goods, delivery, or performance of its order. This notice leaves intact mandatory consumer rights and any obligations Radiant Spark LLC independently assumes under a separate signed agreement.</p>
+  </div>;
+}
 
 interface LegalShieldModalProps {
   isOpen: boolean;
@@ -62,7 +71,8 @@ export const LegalShieldModal: React.FC<LegalShieldModalProps> = ({
               { id: "vastu", label: "Vastu & Astrology" },
               { id: "privacy", label: "Global Privacy" },
               { id: "terms", label: "Quotes & Subscriptions" },
-              { id: "global", label: "All-Country Shield" },
+              { id: "vendors", label: "Vendor Orders & Claims" },
+              { id: "global", label: "Applicable Rights" },
             ] as { id: LegalSectionId; label: string }[]
           ).map((tab) => (
             <button
@@ -226,18 +236,17 @@ export const LegalShieldModal: React.FC<LegalShieldModalProps> = ({
             </>
           )}
 
+          {section === "vendors" && <section className="space-y-3">
+            <h3 className="font-display text-lg font-semibold text-[#141517]">Vendor Orders, Delivery &amp; Claims</h3>
+            <VendorTerms />
+          </section>}
+
           {section === "global" && (
             <>
               <h3 className="font-display text-lg font-semibold text-[#141517]">
-                5. Is There a Single &ldquo;Legal Shield&rdquo; for All Countries?
+                Applicable Rights and Project Agreements
               </h3>
-              <p>
-                No single website clause automatically overrides mandatory local
-                consumer, construction, or licensing laws in every country.
-                However, combining these{" "}
-                <strong className="text-[#141517]">5 operational shields</strong>{" "}
-                gives you practical global protection:
-              </p>
+              <p>Applicable consumer and construction laws govern each transaction. Direct vendor orders follow the seller’s terms and applicable law. Separate design-build or supply work follows the signed project agreement.</p>
               <ul className="list-disc pl-5 space-y-2">
                 <li>
                   <strong className="text-[#141517]">
