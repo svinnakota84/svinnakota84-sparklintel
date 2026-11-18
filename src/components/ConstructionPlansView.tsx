@@ -159,6 +159,32 @@ export const ConstructionPlansView: React.FC<ConstructionPlansViewProps> = ({
   );
 
   const isSubscribed = subscriptionTier !== "free";
+  const [wallColors, setWallColors] = useState<Record<string, string>>(() => {
+    try {
+      const saved: unknown = JSON.parse(localStorage.getItem("sparklintel-wall-finishes") ?? "{}");
+      if (saved && typeof saved === "object" && !Array.isArray(saved)) {
+        return Object.fromEntries(Object.entries(saved).filter(([, value]) =>
+          typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value)
+        ));
+      }
+    } catch {}
+    return {};
+  });
+  const [wallSaveFailed, setWallSaveFailed] = useState(false);
+  const roomKey = activeRoom ? selectedPlan.id + "/" + activeRoom.id : "";
+  const wallColor = (isSubscribed && wallColors[roomKey]) || "#e7dfd2";
+
+  function saveWallColor(hex?: string) {
+    if (!isSubscribed || !roomKey) return;
+    const next = {...wallColors};
+    if (hex) next[roomKey] = hex;
+    else delete next[roomKey];
+    setWallColors(next);
+    try {
+      localStorage.setItem("sparklintel-wall-finishes", JSON.stringify(next));
+      setWallSaveFailed(false);
+    } catch {setWallSaveFailed(true);}
+  }
 
   const handlePlanChange = (plan: ConstructionPlan) => {
     onSelectPlan(plan);
@@ -278,7 +304,11 @@ export const ConstructionPlansView: React.FC<ConstructionPlansViewProps> = ({
           return (
             <button
               key={plan.id}
-              onClick={() => handlePlanChange(plan)}
+              onClick={() => {
+                if (!isSelected && !isSubscribed) {onOpenPricing(); return;}
+                handlePlanChange(plan);
+              }}
+              aria-pressed={isSelected}
               className={`text-left p-4 rounded-xl border transition-all cursor-pointer min-h-[44px] ${
                 isSelected
                   ? "bg-white border-[#B45309] shadow-sm"
@@ -299,12 +329,46 @@ export const ConstructionPlansView: React.FC<ConstructionPlansViewProps> = ({
                 {plan.bedrooms}
               </p>
               <p className="text-[11px] font-medium text-[#B45309] mt-2">
-                Custom Quote · Negotiate After Design
+                {!isSelected && !isSubscribed ? "Pro / Studio preview" : "Explore room layout"}
               </p>
             </button>
           );
         })}
       </div>
+
+      <section aria-labelledby="room-design" className="grid items-start gap-4 rounded-2xl border border-black/10 bg-white p-4 sm:grid-cols-2 sm:p-6">
+        <div className="space-y-3">
+          <h2 id="room-design" className="font-display text-xl font-semibold">Rooms and wall finishes</h2>
+          <p className="text-sm text-stone-700">Explore the rooms in {selectedPlan.name}, then preview a wall color for each room.</p>
+          <label className="flex flex-col gap-1 text-sm font-medium">Choose a room
+            <select className="min-h-11 rounded-lg border border-stone-300 bg-white px-3"
+              value={activeRoom?.id ?? ""} onChange={e=>setActiveRoom(selectedPlan.rooms.find(room=>room.id===e.target.value) ?? null)}>
+              {selectedPlan.rooms.map(room=><option key={room.id} value={room.id}>{room.name}</option>)}
+            </select>
+          </label>
+          {activeRoom && <p className="text-sm text-stone-700">{activeRoom.dimensionsFt} · {activeRoom.zone}</p>}
+          {isSubscribed ? <div className="flex flex-wrap items-center gap-3">
+            <label className="inline-flex min-h-11 items-center gap-2 text-sm font-medium">Wall color
+              <input aria-label="Wall color" type="color" className="h-10 w-14 cursor-pointer rounded border border-stone-300 bg-white p-1"
+                value={wallColor} onChange={e=>saveWallColor(e.target.value)} />
+            </label>
+            <span className="font-mono text-xs text-stone-600">{wallColor.toUpperCase()}</span>
+            <button type="button" className="min-h-11 rounded-lg border border-stone-300 px-3 text-sm" onClick={()=>saveWallColor()}>Reset wall color</button>
+          </div> : <button type="button" onClick={onOpenPricing} className="min-h-11 rounded-lg bg-[#141517] px-4 text-sm font-semibold text-white">Explore Pro and Studio plans</button>}
+          <a className="inline-flex min-h-11 items-center text-sm font-semibold text-amber-900 underline" href="#spark-structural-blueprint">View the full floor plan ↓</a>
+          {wallSaveFailed && <p role="status" className="text-sm text-stone-600">This browser could not save your wall color.</p>}
+        </div>
+        <figure className="rounded-xl bg-[#f7f3ec] p-3">
+          <svg viewBox="0 0 300 175" role="img" aria-label={`${activeRoom?.name ?? "Room"} wall color preview`} className="mx-auto w-full max-w-md">
+            <path d="M35 110 150 68 265 110 150 155Z" fill="#ba9d7b" stroke="#897666"/>
+            <path d="M35 110V50L150 12V68Z" fill={wallColor} stroke="#897666"/>
+            <path d="M150 68V12L265 50V110Z" fill={wallColor} stroke="#897666"/>
+            <path d="M150 68V12L265 50V110Z" fill="#000" fillOpacity=".11"/>
+            <path d="M55 80V60L91 48V68Z" fill="#dbe6e9" stroke="#897666"/>
+          </svg>
+          <figcaption className="text-center text-xs text-stone-600">Wall color preview · confirm the finish with a physical paint sample.</figcaption>
+        </figure>
+      </section>
 
       {/* Interactive 3D House Builder + Drag-Color Exterior Studio */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
@@ -544,7 +608,7 @@ export const ConstructionPlansView: React.FC<ConstructionPlansViewProps> = ({
       </div>
 
       {/* Detailed Engineering Blueprint & Specs Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div id="spark-structural-blueprint" className="scroll-mt-24 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Interactive CAD Blueprint Viewer */}
         <div className="lg:col-span-7 bg-white rounded-2xl border border-black/8 p-4 sm:p-5">
           <div className="flex flex-wrap items-center justify-between gap-2 pb-4 mb-4 border-b border-black/8">
@@ -650,7 +714,7 @@ export const ConstructionPlansView: React.FC<ConstructionPlansViewProps> = ({
                       y={room.y}
                       width={room.w}
                       height={room.h}
-                      fill={room.fill}
+                      fill={isSubscribed ? wallColors[selectedPlan.id + "/" + room.id] ?? room.fill : room.fill}
                       stroke={isRoomSelected ? "#B45309" : "#1E293B"}
                       strokeWidth={isRoomSelected ? 2.5 : 1.5}
                     />
