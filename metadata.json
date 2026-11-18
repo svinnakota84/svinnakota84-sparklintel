@@ -1,0 +1,6 @@
+{
+  "name": "Spark&Lintel Design-Builders",
+  "description": "Engineering construction plans, interactive 3D house builder, 3D kitchen & furniture design studio, and Indian Vastu & astrology home-buying advisor.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
