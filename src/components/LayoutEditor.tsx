@@ -2,7 +2,7 @@ import {useEffect, useRef, useState} from "react";
 import type {PointerEvent} from "react";
 
 type Point = {x: number; y: number};
-type Piece = Point & {id: string; kind: string; w: number; d: number; h: number; color: string; source?: string};
+type Piece = Point & {id: string; kind: string; w: number; d: number; h: number; color: string; source?: string; elevation?: number};
 type Item = {label: string; dims: [number, number, number]; color: string};
 type Mode = "interior" | "casting";
 
@@ -39,6 +39,7 @@ function supplierLink(value: string) {
   return "";
 }
 const grid = 10;
+const maxHeight = 4;
 const finish = ["#a8a297", "#c9b594", "#7d8786", "#9a7463"];
 const limit = (n: number, max = grid) => Math.max(0, Math.min(max, n));
 const makePiece = (catalog: Record<string, Item>, kind: string, x: number, y: number): Piece => {
@@ -53,7 +54,11 @@ function templates(template: string): Piece[] {
     shell: [["slab",3,3], ["wall",3,3], ["wall",5,5], ["stair",6,3]],
     blank: [],
   };
-  return positions[template].map(([kind,x,y]) => makePiece(structure,kind,x,y));
+  return positions[template].map(([kind,x,y]) => {
+    const piece = makePiece(structure,kind,x,y);
+    if(template === "frame" && kind === "beam") return {...piece, x:2, w:5.45, elevation:3};
+    return piece;
+  });
 }
 
 function project(x: number, y: number, z = 0) {
@@ -79,12 +84,12 @@ function shape(piece: Piece, active: boolean) {
     parts.push([x,y,0,w,d,h]);
   }
   return parts.map(([a,b,z,width,depth,height], i) => {
-    const top=z+height, right=a+width, front=b+depth;
+    const base=z+(piece.elevation ?? 0), top=base+height, right=a+width, front=b+depth;
     const stroke=active?"#71360f":"#57534e";
     const c=piece.color;
     return <g key={i} stroke={stroke} strokeWidth={active?2:1} strokeLinejoin="round">
-      <polygon fill={c} points={[project(a,front,z),project(right,front,z),project(right,front,top),project(a,front,top)].join(" ")}/>
-      <polygon fill={c} fillOpacity=".76" points={[project(right,b,z),project(right,front,z),project(right,front,top),project(right,b,top)].join(" ")}/>
+      <polygon fill={c} points={[project(a,front,base),project(right,front,base),project(right,front,top),project(a,front,top)].join(" ")}/>
+      <polygon fill={c} fillOpacity=".76" points={[project(right,b,base),project(right,front,base),project(right,front,top),project(right,b,top)].join(" ")}/>
       <polygon fill={c} stroke={stroke} points={[project(a,b,top),project(right,b,top),project(right,front,top),project(a,front,top)].join(" ")}/>
     </g>;
   });
@@ -97,7 +102,7 @@ function readLayout(key: string, catalog: Record<string, Item>) {
     return {
       pieces: saved.pieces.slice(0,80).filter((p: Piece) => p && Object.hasOwn(catalog,p.kind) &&
         typeof p.id==="string" && /^#[0-9a-f]{6}$/i.test(p.color) &&
-        [p.x,p.y,p.w,p.d,p.h].every(v=>Number.isFinite(v) && v>=0 && v<=grid)),
+        [p.x,p.y,p.w,p.d,p.h,p.elevation ?? 0].every(v=>Number.isFinite(v) && v>=0 && v<=grid)),
       lines: saved.lines.slice(0,50).filter((line: Point[])=>Array.isArray(line) && line.length<=200 &&
         line.every(p=>p && Number.isFinite(p.x) && Number.isFinite(p.y))),
     } as {pieces: Piece[]; lines: Point[][]};
@@ -150,7 +155,7 @@ export function LayoutEditor({mode, preview, onPlans}: {mode: Mode; preview: boo
     setPieces(previous=>previous.map(p=>{
       if(p.id!==id)return p;
       const next={...p,...patch};
-      return {...next,x:limit(next.x,grid-next.w),y:limit(next.y,grid-next.d)};
+      return {...next,x:limit(next.x,grid-next.w),y:limit(next.y,grid-next.d),elevation:limit(next.elevation ?? 0,maxHeight-next.h)};
     }));
   }
   function move(event: PointerEvent) {
@@ -233,7 +238,9 @@ export function LayoutEditor({mode, preview, onPlans}: {mode: Mode; preview: boo
           </>}
         </div>
         {item && <div className="flex flex-wrap gap-3">
-          {([["w","Width"],["d","Depth"],["h","Height"]] as const).map(([field,label])=><label className="flex flex-col gap-1 text-sm" key={item.id+field}>{label} (m)<input className={button+" w-24"} type="number" min=".1" max={field==="h"?4:10} step=".01" value={item[field]} onChange={e=>{const n=e.target.valueAsNumber;if(n>=.1&&n<=(field==="h"?4:10))updatePiece(item.id,{[field]:n});}}/></label>)}
+          {([["w","Width"],["d","Depth"],["h","Height"]] as const).map(([field,label])=><label className="flex flex-col gap-1 text-sm" key={item.id+field}>{label} (m)<input className={button+" w-24"} type="number" min=".1" max={field==="h"?maxHeight:grid} step=".01" value={item[field]} onChange={e=>{const n=e.target.valueAsNumber;if(n>=.1&&n<=(field==="h"?maxHeight:grid))updatePiece(item.id,{[field]:n});}}/></label>)}
+          <label className="flex flex-col gap-1 text-sm">Elevation (m)<input className={button+" w-24"} type="number" min="0" max={maxHeight-item.h} step=".01" value={item.elevation ?? 0}
+            onChange={event=>{const elevation=event.target.valueAsNumber;if(elevation>=0&&elevation<=maxHeight-item.h)updatePiece(item.id,{elevation});}}/></label>
           <label className="flex flex-col gap-1 text-sm">Finish<select className={button} value={item.color} onChange={e=>updatePiece(item.id,{color:e.target.value})}>
             <option value={catalog[item.kind].color}>Original</option>{finish.filter(c=>c!==catalog[item.kind].color).map((c,i)=><option key={c} value={c}>{["Concrete gray","Sand","Slate","Clay"][finish.indexOf(c)] ?? i}</option>)}
           </select></label>
