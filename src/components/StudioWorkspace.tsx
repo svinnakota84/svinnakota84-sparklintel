@@ -14,6 +14,7 @@ import {
   Lock,
   Move,
   Palette,
+  Pencil,
   Plus,
   RotateCw,
   ShieldCheck,
@@ -21,8 +22,13 @@ import {
   Sofa,
   Sparkles,
   Trash2,
+  Undo2,
   X,
 } from "lucide-react";
+import sophiakeyItalianImg from "../assets/images/sophiakey_italian_minimalism_1795042835467.jpg";
+import sophiakeyLightLuxuryImg from "../assets/images/sophiakey_light_luxury_1795042838543.jpg";
+import sophiakeyModernWoodenImg from "../assets/images/sophiakey_modern_wooden_1795042844814.jpg";
+import sophiakeyOutdoorImg from "../assets/images/sophiakey_outdoor_series_1795042840295.jpg";
 import {
   BACKSPLASH_FINISHES,
   CABINET_COLOR_COMBOS,
@@ -134,6 +140,12 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
   const [showVastuCompass, setShowVastuCompass] = useState(false);
   const [lockNotice, setLockNotice] = useState<string | null>(null);
   const [furnitureFilter, setFurnitureFilter] = useState<string>("all");
+  const [interactionMode, setInteractionMode] = useState<"move" | "pencil">(
+    "move"
+  );
+  const [pencilStrokes, setPencilStrokes] = useState<
+    { x: number; z: number }[][]
+  >([]);
   const [placingFurniture, setPlacingFurniture] =
     useState<PlaceableFurnitureSpec | null>(null);
   const [draggedSpec, setDraggedSpec] = useState<{
@@ -403,10 +415,16 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
             if (!placingFurniture) return;
             onAddPlacedFurniture(placingFurniture, x, z);
             setPlacingFurniture(null);
+            setInteractionMode("move");
           }}
+          interactionMode={interactionMode}
+          pencilStrokes={pencilStrokes}
+          onAddPencilStroke={(stroke) =>
+            setPencilStrokes((prev) => [...prev, stroke])
+          }
         />
 
-        {/* Minimal Top-Left Context Readout */}
+        {/* Minimal Top-Left Context Readout + 3D Move / Pencil Draw Switcher */}
         <div className="absolute top-3 left-3 sm:top-5 sm:left-5 z-10 pointer-events-auto max-w-[calc(100vw-24px)] sm:max-w-lg">
           <div className="bg-[#FFFFFF]/95 border border-black/10 rounded-xl px-3.5 py-2.5 shadow-sm">
             <div className="flex items-center gap-2 text-[11px] font-mono text-[#78716C]">
@@ -439,6 +457,63 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
                   Vastu AI →
                 </button>
               </div>
+            </div>
+
+            <div className="mt-2 pt-2 border-t border-black/8 flex flex-wrap items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setInteractionMode("move")}
+                className={`min-h-[30px] px-2.5 py-1 rounded-lg text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer transition-colors ${
+                  interactionMode === "move"
+                    ? "bg-[#141517] text-white"
+                    : "bg-[#FAF9F6] text-[#57534E] border border-black/10 hover:text-[#141517]"
+                }`}
+              >
+                <Move className="w-3 h-3" />
+                <span>Move Items</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPlacingFurniture(null);
+                  setInteractionMode("pencil");
+                }}
+                className={`min-h-[30px] px-2.5 py-1 rounded-lg text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer transition-colors ${
+                  interactionMode === "pencil"
+                    ? "bg-[#B45309] text-white"
+                    : "bg-[#FAF9F6] text-[#57534E] border border-black/10 hover:text-[#141517]"
+                }`}
+              >
+                <Pencil className="w-3 h-3" />
+                <span>Pencil Draw</span>
+              </button>
+              {pencilStrokes.length > 0 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPencilStrokes((prev) => prev.slice(0, -1))
+                    }
+                    className="min-h-[30px] px-2 py-1 rounded-lg text-[11px] font-medium bg-white border border-black/10 text-[#141517] inline-flex items-center gap-1 cursor-pointer"
+                    title="Undo last floor mark"
+                  >
+                    <Undo2 className="w-3 h-3" />
+                    <span>Undo</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPencilStrokes([])}
+                    className="min-h-[30px] px-2 py-1 rounded-lg text-[11px] font-medium bg-white border border-black/10 text-red-700 cursor-pointer"
+                  >
+                    Clear Marks
+                  </button>
+                </>
+              )}
+              <span className="text-[10px] font-mono text-[#78716C] ml-auto">
+                {interactionMode === "pencil"
+                  ? "Draw on 3D floor"
+                  : "Drag furniture or orbit"}
+              </span>
             </div>
           </div>
         </div>
@@ -1375,6 +1450,264 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Visual Partner Furniture Showroom (Sophia Key Store, @sophiakey_designerfurniture & George Buildings) */}
+        <section
+          aria-labelledby="partner-showroom-heading"
+          className="bg-white rounded-2xl border border-black/10 p-5 sm:p-6 space-y-6"
+        >
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-black/8">
+            <div>
+              <p className="text-xs font-mono text-[#B45309]">
+                Featured Collections · Sophia Key Furniture &amp; George Buildings
+              </p>
+              <h2
+                id="partner-showroom-heading"
+                className="font-display text-xl sm:text-2xl font-semibold text-[#141517] mt-0.5"
+              >
+                Visual Furniture Showroom — Preview in 3D &amp; Shop Direct
+              </h2>
+              <p className="text-xs sm:text-sm text-[#57534E] mt-1 max-w-3xl">
+                Browse signature collections from{" "}
+                <strong>sophiakeyfurniture.store</strong>,{" "}
+                <strong>@sophiakey_designerfurniture</strong>, and{" "}
+                <strong>georgebuildings.com</strong>. Tap any piece below to
+                drop it directly into the 3D Studio above where you can drag,
+                rotate, or sketch room outlines with the Pencil tool.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <a
+                href="https://sophiakeyfurniture.store/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="min-h-[38px] px-3 py-1.5 rounded-lg bg-[#141517] text-white text-xs font-semibold hover:bg-[#B45309] inline-flex items-center gap-1.5"
+              >
+                <span>Sophia Key Store</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+              <a
+                href="https://www.instagram.com/sophiakey_designerfurniture/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="min-h-[38px] px-3 py-1.5 rounded-lg border border-black/15 bg-[#FAF9F6] text-xs font-semibold text-[#141517] hover:border-[#B45309] inline-flex items-center gap-1.5"
+              >
+                <span>@sophiakey_designerfurniture</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
+
+          {/* 4 Photorealistic Showroom Collections */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              {
+                title: "Italian Minimalism · Bouclé & Travertine",
+                source: "sophiakeyfurniture.store",
+                image: sophiakeyItalianImg,
+                alt: "Italian minimalist ivory curved boucle sofa with travertine coffee plinth",
+                featuredSpecId: "sk-boucle-cloud-sofa",
+                url: "https://sophiakeyfurniture.store/",
+                itemsLabel: "Cloud Bouclé Sofa · Travertine Plinth",
+              },
+              {
+                title: "Light Luxury · Travertine Dining & Brass",
+                source: "@sophiakey_designerfurniture",
+                image: sophiakeyLightLuxuryImg,
+                alt: "Travertine pedestal round dining table with shearling brass chairs and saddle leather bench",
+                featuredSpecId: "sk-travertine-round-dining",
+                url: "https://www.instagram.com/sophiakey_designerfurniture/",
+                itemsLabel: "Travertine Table · Cognac Bench",
+              },
+              {
+                title: "Modern Wooden · Fluted Walnut & Vitrine",
+                source: "George Buildings & Sophia Key",
+                image: sophiakeyModernWoodenImg,
+                alt: "Fluted walnut sideboard credenza and illuminated dark glass vitrine wardrobe",
+                featuredSpecId: "gb-vitrine-wardrobe",
+                url: "https://georgebuildings.com/george-furniture/",
+                itemsLabel: "Vitrine Wardrobe · Fluted Credenza",
+              },
+              {
+                title: "Outdoor Villa · Teak Sectional & Olive Urn",
+                source: "sophiakeyfurniture.store",
+                image: sophiakeyOutdoorImg,
+                alt: "Outdoor villa olive linen sectional lounge and sculptural cast olive tree planter",
+                featuredSpecId: "sk-mohair-sectional",
+                url: "https://sophiakeyfurniture.store/",
+                itemsLabel: "Mohair Sectional · Cast Planter",
+              },
+            ].map((col) => {
+              const matchedSpec = PLACEABLE_FURNITURE_CATALOG.find(
+                (item) => item.id === col.featuredSpecId
+              );
+              const locked = matchedSpec?.proOnly && !isSubscribed;
+              return (
+                <article
+                  key={col.title}
+                  className="rounded-xl border border-black/10 bg-[#FAF9F6] overflow-hidden flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="aspect-[4/3] w-full bg-[#ECE8DF] overflow-hidden">
+                      <img
+                        src={col.image}
+                        alt={col.alt}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="p-3.5">
+                      <p className="text-[10px] font-mono text-[#92400E] truncate">
+                        {col.source}
+                      </p>
+                      <h3 className="text-sm font-semibold text-[#141517] mt-0.5 leading-snug">
+                        {col.title}
+                      </h3>
+                      <p className="text-[11px] text-[#57534E] mt-1">
+                        {col.itemsLabel}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="px-3.5 pb-3.5 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!matchedSpec) return;
+                        if (locked) {
+                          promptUpgrade(matchedSpec.name);
+                          return;
+                        }
+                        onAddPlacedFurniture(matchedSpec);
+                        setDockExpanded(true);
+                        setDockTab("furniture");
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="min-h-[34px] px-2.5 py-1 rounded-lg bg-[#141517] text-white text-[11px] font-semibold hover:bg-[#B45309] transition-colors inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      {locked ? (
+                        <>
+                          <Lock className="w-3 h-3" />
+                          <span>Unlock 3D</span>
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-3 h-3" />
+                          <span>Place in 3D</span>
+                        </>
+                      )}
+                    </button>
+                    <a
+                      href={col.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] font-semibold text-[#92400E] hover:underline inline-flex items-center gap-0.5"
+                    >
+                      <span>View</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          {/* Interactive 14-Piece Vendor Catalog Grid (Always visible on Website & Mobile) */}
+          <div className="pt-2 border-t border-black/8 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs font-semibold text-[#141517]">
+                All {PLACEABLE_FURNITURE_CATALOG.length} Placeable Pieces from Sophia Key &amp; George Buildings
+              </p>
+              <span className="text-[11px] text-[#57534E]">
+                Tap &ldquo;+ Place in 3D&rdquo; to load above &amp; drag into position
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {PLACEABLE_FURNITURE_CATALOG.map((item) => {
+                const locked = item.proOnly && !isSubscribed;
+                return (
+                  <div
+                    key={item.id}
+                    className="rounded-xl border border-black/10 bg-[#FAF9F6] p-3 flex flex-col justify-between gap-2.5"
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <span
+                        className="w-8 h-8 rounded-lg border border-black/15 shrink-0 mt-0.5"
+                        style={{ backgroundColor: item.primaryHex }}
+                      />
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-mono text-[#92400E] truncate">
+                          {item.vendorLabel} · {item.categoryTag}
+                        </p>
+                        <h3 className="text-xs font-semibold text-[#141517] leading-snug">
+                          {item.name}
+                        </h3>
+                        <p className="text-[11px] text-[#57534E] mt-0.5">
+                          {item.dimensions} · {item.materialNote}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2 pt-2 border-t border-black/8">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (locked) {
+                            onOpenSubscription();
+                            return;
+                          }
+                          onAddPlacedFurniture(item);
+                          setDockExpanded(true);
+                          setDockTab("furniture");
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        className={`min-h-[34px] px-2.5 py-1 rounded-lg text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer ${
+                          locked
+                            ? "bg-[#EFECE6] text-[#92400E]"
+                            : "bg-[#141517] text-white hover:bg-[#B45309]"
+                        }`}
+                      >
+                        {locked ? (
+                          <>
+                            <Lock className="w-3 h-3" />
+                            <span>Subscribe</span>
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="w-3 h-3" />
+                            <span>+ Place in 3D</span>
+                          </>
+                        )}
+                      </button>
+
+                      {isSubscribed ? (
+                        <a
+                          href={item.vendorUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] font-semibold text-[#92400E] hover:underline inline-flex items-center gap-1"
+                        >
+                          <span>Order</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      ) : (
+                        <a
+                          href={item.vendorUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] text-[#57534E] hover:text-[#141517] underline"
+                        >
+                          Catalog ↗
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
 
         {/* Direct Vendor Storefronts + Bilateral Legal Shield */}
         <section

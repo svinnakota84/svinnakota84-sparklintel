@@ -8,14 +8,16 @@ type Item = {label: string; dims: [number, number, number]; color: string};
 type Mode = "interior" | "casting";
 
 const furniture: Record<string, Item> = {
-  sofa: {label: "Sofa", dims: [2.2, .9, .85], color: "#a47d67"},
-  chair: {label: "Accent chair", dims: [.75, .8, .9], color: "#8c957a"},
-  table: {label: "Dining table", dims: [1.6, .85, .75], color: "#af8662"},
-  bed: {label: "Bed", dims: [1.6, 2, .65], color: "#a3929b"},
-  cabinet: {label: "Cabinet", dims: [1.25, .55, 1.9], color: "#93806e"},
-  lamp: {label: "Table lamp", dims: [.3, .3, .5], color: "#bc9958"},
-  vase: {label: "Vase", dims: [.22, .22, .35], color: "#9c7467"},
-  ottoman: {label: "Ottoman", dims: [.55, .55, .42], color: "#8f9a89"},
+  sofa: {label: "Bouclé Cloud Sofa", dims: [2.4, .95, .82], color: "#d8cfc0"},
+  chair: {label: "Swivel Accent Chair", dims: [.82, .82, .88], color: "#c29b70"},
+  table: {label: "Travertine Round Table", dims: [1.5, 1.5, .75], color: "#d5cab8"},
+  credenza: {label: "Fluted Walnut Credenza", dims: [1.9, .5, .8], color: "#6e4b34"},
+  wardrobe: {label: "Vitrine Wardrobe", dims: [1.6, .6, 2.1], color: "#3d3f44"},
+  sectional: {label: "Olive Mohair Sectional", dims: [2.7, 1.6, .84], color: "#5f6e58"},
+  bench: {label: "Saddle Gallery Bench", dims: [1.5, .48, .45], color: "#9c5b34"},
+  bed: {label: "King Platform Bed", dims: [1.8, 2.1, .68], color: "#a3929b"},
+  planter: {label: "Cast Olive Planter", dims: [.7, .7, 1.5], color: "#687857"},
+  lamp: {label: "Alabaster Table Lamp", dims: [.35, .35, .55], color: "#d2b47c"},
 };
 const structure: Record<string, Item> = {
   wall: {label: "Wall panel", dims: [3, .2, 2.8], color: "#a8a297"},
@@ -110,12 +112,21 @@ function readLayout(key: string, catalog: Record<string, Item>) {
   } catch {return null}
 }
 
+function seedInteriorPieces(): Piece[] {
+  return [
+    makePiece(furniture, "sofa", 1.8, 5.2),
+    makePiece(furniture, "table", 5.8, 2.2),
+    makePiece(furniture, "chair", 4.6, 5.4),
+    makePiece(furniture, "credenza", 1.2, 1.5),
+  ];
+}
+
 export function LayoutEditor({mode, preview, onPlans}: {mode: Mode; preview: boolean; onPlans: () => void}) {
   const casting=mode==="casting";
   const catalog=casting?structure:furniture;
   const key="sparklintel-layout-"+mode;
   const [initial]=useState(()=>readLayout(key,catalog));
-  const [pieces,setPieces]=useState<Piece[]>(()=>initial?.pieces ?? (casting?templates("wall"):[]));
+  const [pieces,setPieces]=useState<Piece[]>(()=>initial?.pieces && initial.pieces.length > 0 ? initial.pieces : (casting?templates("wall"):seedInteriorPieces()));
   const [lines,setLines]=useState<Point[][]>(()=>initial?.lines ?? []);
   const [tool,setTool]=useState<"move" | "pencil">("move");
   const [view,setView]=useState<"plan" | "3d">("plan");
@@ -143,13 +154,17 @@ export function LayoutEditor({mode, preview, onPlans}: {mode: Mode; preview: boo
     return {x:(b+a)/2,y:(b-a)/2};
   }
   function begin(event: PointerEvent, piece?: Piece) {
-    if(event.button!==0 || gesture.current)return;
+    if ((event.pointerType === "mouse" && event.button !== 0) || gesture.current) return;
     const at=point(event);
     if(!at)return;
     if(tool==="move" && !piece)return;
     if(tool==="pencil" && lines.length>=50)return;
     gesture.current={pointer:event.pointerId,point:at,piece:tool==="move"?piece:undefined};
-    stage.current?.setPointerCapture(event.pointerId);
+    try {
+      stage.current?.setPointerCapture(event.pointerId);
+    } catch {
+      // Ignore environments where SVG pointer capture throws
+    }
     if(tool==="move" && piece)setSelected(piece.id);
     else setLines(previous=>[...previous,[{x:limit(at.x),y:limit(at.y)}]]);
   }
@@ -175,8 +190,8 @@ export function LayoutEditor({mode, preview, onPlans}: {mode: Mode; preview: boo
     }
   }
   const button="min-h-11 rounded-lg border border-stone-300 bg-white px-3 text-sm font-medium text-stone-900 aria-pressed:border-amber-800 aria-pressed:bg-amber-100 disabled:opacity-50";
-  return <details className="mx-auto mt-5 w-[calc(100%-2rem)] max-w-7xl rounded-2xl border border-stone-200 bg-[#fbf9f4]">
-    <summary className="cursor-pointer px-5 py-4 font-semibold">{casting?"Draw and build a custom casting layout":"Arrange furniture and sketch a room"}</summary>
+  return <details open className="mx-auto mt-5 w-[calc(100%-2rem)] max-w-7xl rounded-2xl border border-stone-200 bg-[#fbf9f4]">
+    <summary className="cursor-pointer px-5 py-4 font-semibold">{casting?"Draw & Move 3D Casting Walls, Columns & Structures (Pencil + Move)":"Pencil Sketch & Move Sophia Key / George Furniture Floor Plan"}</summary>
     <div className="space-y-4 border-t border-stone-200 p-4 sm:p-5">
       {!casting && preview && <section aria-labelledby="shop-vendors" className="space-y-3">
         <h2 id="shop-vendors" className="text-lg font-semibold">Shop furniture directly from suppliers</h2>
@@ -190,24 +205,26 @@ export function LayoutEditor({mode, preview, onPlans}: {mode: Mode; preview: boo
           <a href={vendor.url} target="_blank" rel="noopener noreferrer" className="mt-auto inline-flex min-h-11 items-center self-start text-sm font-semibold text-amber-900 underline">{vendor.action} ↗</a>
           {vendor.inquiry && <a href={vendor.inquiry} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center self-start text-sm font-semibold text-amber-900 underline">Contact Sophiakey for sourcing ↗</a>}
         </article>)}</div>
-        <p className="text-sm text-stone-700">Add a furniture shape below, enter its dimensions, and attach its vendor link to keep the reference with your layout.</p>
       </section>}
-      {(!casting && !preview) ? <div>
-        <p className="mb-2 text-sm text-stone-700">Supplier browsing and furniture placement are available in the Pro and Studio plan previews.</p>
-        <button type="button" className={button} onClick={onPlans}>View plan options</button>
-      </div> : <>
+      {!casting && !preview && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-2.5 text-xs text-stone-800">
+          <span>Draw freely with the <strong>Pencil</strong> or drag furniture below. Subscribe to Pro/Studio to save layouts and unlock full vendor store ordering.</span>
+          <button type="button" className="rounded-lg bg-stone-900 px-3 py-1.5 font-semibold text-white cursor-pointer" onClick={onPlans}>View Subscriptions</button>
+        </div>
+      )}
         <div className="flex flex-wrap gap-2">
           {casting && <><label className="flex items-center gap-2 text-sm">Starting layout<select className={button} value={template} onChange={e=>setTemplate(e.target.value)}>
             <option value="wall">Walls and openings</option><option value="frame">Column and beam frame</option><option value="shell">Slabs and stairs</option><option value="blank">Blank layout</option>
           </select></label><button className={button} type="button" onClick={()=>{if(pieces.length+templates(template).length<=80)setPieces(previous=>[...previous,...templates(template)]);}} disabled={template==="blank"}>Add template</button>
+          </>}
           {!confirmClear ? (
-            <button className={button} type="button" onClick={()=>setConfirmClear(true)}>Clear layout</button>
+            <button className={button} type="button" onClick={()=>setConfirmClear(true)}>Clear canvas</button>
           ) : (
             <span className="inline-flex items-center gap-1.5">
               <button className="min-h-11 rounded-lg border border-red-300 bg-red-50 px-3 text-sm font-semibold text-red-800 cursor-pointer" type="button" onClick={()=>{setPieces([]);setLines([]);setSelected("");setConfirmClear(false);}}>Confirm clear</button>
               <button className={button} type="button" onClick={()=>setConfirmClear(false)}>Cancel</button>
             </span>
-          )}</>}
+          )}
           <label className="flex items-center gap-2 text-sm">{casting?"Element":"Furniture"}<select className={button} value={kind} onChange={e=>setKind(e.target.value)}>{Object.entries(catalog).map(([id,p])=><option value={id} key={id}>{p.label}</option>)}</select></label>
           <button className={button} type="button" disabled={pieces.length>=80} onClick={()=>{
             const link=casting?"":supplierLink(source.trim());
@@ -215,37 +232,38 @@ export function LayoutEditor({mode, preview, onPlans}: {mode: Mode; preview: boo
             const p=makePiece(catalog,kind,4+pieces.length%4*.4,4);
             if(link)p.source=link;
             setPieces(previous=>[...previous,p]);setSelected(p.id);setTool("move");setSource("");setSourceError(false);
-          }}>Add to layout</button>
+          }}>Add to canvas</button>
         </div>
         {!casting && <div className="max-w-lg">
-          <label className="flex flex-col gap-1 text-sm">Supplier product link (optional)
-            <input type="url" className={button} value={source} onChange={event=>{setSource(event.target.value);setSourceError(false);}} placeholder="https://…" />
+          <label className="flex flex-col gap-1 text-sm">Supplier product link (optional — George Buildings / Sophiakey / Instagram)
+            <input type="url" className={button} value={source} onChange={event=>{setSource(event.target.value);setSourceError(false);}} placeholder="https://sophiakeyfurniture.store/…" />
           </label>
           {sourceError && <p role="alert" className="text-sm text-red-800">Enter an HTTPS link from George Buildings, Sophiakey Furniture, or Instagram.</p>}
         </div>}
         <div className="flex flex-wrap gap-2">
-          <button className={button} type="button" aria-pressed={view==="plan"} onClick={()=>setView("plan")}>Floor plan</button>
-          <button className={button} type="button" aria-pressed={view==="3d"} onClick={()=>{setView("3d");setTool("move");}}>3D view</button>
-          <button className={button} type="button" aria-pressed={tool==="move"} onClick={()=>setTool("move")}>Move</button>
-          <button className={button} type="button" aria-pressed={tool==="pencil"} onClick={()=>{setTool("pencil");setView("plan");}}>Pencil</button>
+          <button className={button} type="button" aria-pressed={view==="plan"} onClick={()=>setView("plan")}>2D Floor Plan</button>
+          <button className={button} type="button" aria-pressed={view==="3d"} onClick={()=>{setView("3d");}}>3D Isometric</button>
+          <button className={button} type="button" aria-pressed={tool==="move"} onClick={()=>setTool("move")}>✋ Move Items</button>
+          <button className={button} type="button" aria-pressed={tool==="pencil"} onClick={()=>{setTool("pencil");}}>✏️ Pencil Draw</button>
           <button className={button} type="button" disabled={!lines.length} onClick={()=>setLines(previous=>previous.slice(0,-1))}>Undo pencil mark</button>
         </div>
-        <p className="text-sm text-stone-700">{tool==="pencil"?"Draw with a mouse, finger, or stylus. Pencil marks stay on the floor plan.":"Drag an object with a mouse or finger, or select it and use the arrow buttons."}</p>
-        <svg ref={stage} aria-label={view==="plan"?"Editable floor plan":"Editable 3D layout"} role="img" viewBox="0 0 420 310" className="mx-auto block w-full max-w-[660px] rounded-xl border border-stone-300 bg-[#f1ece2]" style={{touchAction:"none"}} onPointerDown={event=>begin(event)} onPointerMove={move} onLostPointerCapture={()=>{gesture.current=null}}>
+        <p className="text-sm text-stone-700">{tool==="pencil"?"Pencil active: draw walls, rugs, or paths with your mouse, finger, or stylus (works in both 2D and 3D views).":"Move active: drag any furniture/structure item with a mouse or finger, or select it and use the arrows below."}</p>
+        <svg ref={stage} aria-label={view==="plan"?"Editable floor plan":"Editable 3D layout"} role="img" viewBox="0 0 420 310" className="mx-auto block w-full max-w-[660px] rounded-xl border border-stone-300 bg-[#f1ece2]" style={{touchAction:"none",cursor:tool==="pencil"?"crosshair":"grab"}} onPointerDown={event=>begin(event)} onPointerMove={move} onPointerUp={()=>{gesture.current=null}} onPointerCancel={()=>{gesture.current=null}} onLostPointerCapture={()=>{gesture.current=null}}>
           {view==="plan"? <>
             <rect x="60" y="20" width="300" height="270" fill="#fcfaf3" stroke="#8c8274"/>
             {Array.from({length:9},(_,i)=><path key={i} d={`M${90+i*30} 20v270 M60 ${47+i*27}h300`} fill="none" stroke="#ded6c9"/>)}
-            {pieces.map(p=><g key={p.id} style={{touchAction:"none"}} onPointerDown={event=>{event.stopPropagation();begin(event,p);}}>
+            {pieces.map(p=><g key={p.id} style={{touchAction:"none"}} onPointerDown={event=>{if(tool==="move"){event.stopPropagation();begin(event,p);}}}>
               <rect x={60+p.x*30} y={20+p.y*27} width={p.w*30} height={p.d*27} rx="2" fill={p.color} stroke={selected===p.id?"#703908":"#4e463e"} strokeWidth={selected===p.id?3:1}/>
-              {p.w>=1.1 && p.d>=.45 && <text x={64+p.x*30} y={32+p.y*27} fontSize="9" fill="#17130f" pointerEvents="none">{catalog[p.kind].label}</text>}
+              {p.w>=1.1 && p.d>=.45 && <text x={64+p.x*30} y={32+p.y*27} fontSize="8.5" fill="#17130f" pointerEvents="none">{catalog[p.kind].label}</text>}
             </g>)}
-            {lines.map((line,index)=><polyline key={index} points={line.map(p=>[60+p.x*30,20+p.y*27].join(",")).join(" ")} fill="none" stroke="#563b27" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" pointerEvents="none"/>)}
+            {lines.map((line,index)=><polyline key={index} points={line.map(p=>[60+p.x*30,20+p.y*27].join(",")).join(" ")} fill="none" stroke="#92400E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" pointerEvents="none"/>)}
           </> : <>
             <polygon points={[project(0,0),project(grid,0),project(grid,grid),project(0,grid)].join(" ")} fill="#f8f4eb" stroke="#8c8274"/>
             {Array.from({length:9},(_,i)=><g key={i} opacity=".45" stroke="#b9afa2">
               <polyline points={project(i+1,0)+" "+project(i+1,grid)}/><polyline points={project(0,i+1)+" "+project(grid,i+1)}/>
             </g>)}
-            {[...pieces].sort((a,b)=>a.x+a.y-b.x-b.y).map(p=><g key={p.id} style={{touchAction:"none"}} onPointerDown={event=>{event.stopPropagation();begin(event,p);}}>{shape(p,p.id===selected)}</g>)}
+            {[...pieces].sort((a,b)=>a.x+a.y-b.x-b.y).map(p=><g key={p.id} style={{touchAction:"none"}} onPointerDown={event=>{if(tool==="move"){event.stopPropagation();begin(event,p);}}}>{shape(p,p.id===selected)}</g>)}
+            {lines.map((line,index)=><polyline key={"3d-line-"+index} points={line.map(p=>project(p.x,p.y,0)).join(" ")} fill="none" stroke="#92400E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" pointerEvents="none"/>)}
           </>}
         </svg>
         <div className="flex flex-wrap items-center gap-2">
@@ -266,7 +284,6 @@ export function LayoutEditor({mode, preview, onPlans}: {mode: Mode; preview: boo
         </div>}
         {item?.source && supplierLink(item.source) && <a href={supplierLink(item.source)} target="_blank" rel="noopener noreferrer" className="inline-block py-2 text-sm font-medium text-amber-900 underline">View this item at the vendor ↗</a>}
         <p className="text-xs text-stone-600">{casting?"Concept geometry for layout discussion. A qualified local engineer must validate structural designs. ":"Supplier models use approximate shapes. "}{storageFailed?"This browser could not save the layout.":preview?"This layout saves in this browser.":"Select a plan preview to keep your layout in this browser."}</p>
-      </>}
     </div>
   </details>;
 }

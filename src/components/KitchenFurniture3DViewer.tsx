@@ -46,6 +46,9 @@ export interface Kitchen3DViewerProps {
   onDropNewFurnitureAt?: (x: number, z: number) => void;
   placingFurnitureName?: string | null;
   onTapPlaceFurnitureAt?: (x: number, z: number) => void;
+  interactionMode?: "move" | "pencil";
+  pencilStrokes?: { x: number; z: number }[][];
+  onAddPencilStroke?: (stroke: { x: number; z: number }[]) => void;
 }
 
 const CAMERA_TARGETS: Record<
@@ -514,6 +517,9 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
   onDropNewFurnitureAt,
   placingFurnitureName = null,
   onTapPlaceFurnitureAt,
+  interactionMode = "move",
+  pencilStrokes = [],
+  onAddPencilStroke,
 }) => {
   const outerRef = useRef<HTMLDivElement | null>(null);
   const mountRef = useRef<HTMLDivElement | null>(null);
@@ -550,6 +556,9 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
     onDropNewFurnitureAt,
     placingFurnitureName,
     onTapPlaceFurnitureAt,
+    interactionMode,
+    pencilStrokes,
+    onAddPencilStroke,
   });
   propsRef.current = {
     layout,
@@ -579,11 +588,16 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
     onDropNewFurnitureAt,
     placingFurnitureName,
     onTapPlaceFurnitureAt,
+    interactionMode,
+    pencilStrokes,
+    onAddPencilStroke,
   };
 
   const sceneApiRef = useRef<{
     rebuildDynamicScene: () => void;
     rebuildPlacedFurniture: () => void;
+    rebuildPencilStrokes: () => void;
+    setInteractionMode: (mode: "move" | "pencil") => void;
     triggerCameraPreset: (preset: CameraPreset) => void;
     requestRender: () => void;
     raycastDropZone: (
@@ -785,6 +799,12 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
     const placedRoot = new THREE.Group();
     scene.add(placedRoot);
     let placedGroups: THREE.Group[] = [];
+
+    // 3D Floor Pencil Sketch Group
+    const pencilRoot = new THREE.Group();
+    scene.add(pencilRoot);
+    const activePencilRoot = new THREE.Group();
+    scene.add(activePencilRoot);
 
     // Animation Trackers
     let animatedDoors: { pivot: THREE.Group; sign: number }[] = [];
@@ -1497,8 +1517,36 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
       });
     };
 
+    const drawStrokeGroup = (
+      targetGroup: THREE.Group,
+      strokes: { x: number; z: number }[][]
+    ) => {
+      disposeGroup(targetGroup);
+      targetGroup.clear();
+      const mat = new THREE.MeshBasicMaterial({ color: "#92400E" });
+      strokes.forEach((stroke) => {
+        if (stroke.length < 2) return;
+        const pts = stroke.map((p) => new THREE.Vector3(p.x, 0.036, p.z));
+        const curve = new THREE.CatmullRomCurve3(pts);
+        const geom = new THREE.TubeGeometry(
+          curve,
+          Math.max(8, Math.min(80, stroke.length * 2)),
+          0.022,
+          6,
+          false
+        );
+        const mesh = new THREE.Mesh(geom, mat);
+        targetGroup.add(mesh);
+      });
+    };
+
+    const rebuildPencilStrokes = () => {
+      drawStrokeGroup(pencilRoot, propsRef.current.pencilStrokes ?? []);
+    };
+
     rebuildDynamicScene();
     rebuildPlacedFurniture();
+    rebuildPencilStrokes();
 
     if (!isSoftwareGl) {
       renderer.compile(scene, camera);
@@ -1673,6 +1721,8 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
       return null;
     };
 
+    let activePencilPoints: { x: number; z: number }[] | null = null;
+
     sceneApiRef.current = {
       rebuildDynamicScene: () => {
         rebuildDynamicScene();
@@ -1682,6 +1732,13 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
       rebuildPlacedFurniture: () => {
         rebuildPlacedFurniture();
         requestRender();
+      },
+      rebuildPencilStrokes: () => {
+        rebuildPencilStrokes();
+        requestRender();
+      },
+      setInteractionMode: (mode: "move" | "pencil") => {
+        controls.enabled = mode === "move";
       },
       triggerCameraPreset,
       requestRender,
@@ -1701,6 +1758,13 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
 
     const onPointerDown = (e: PointerEvent) => {
       pointerDownPos.set(e.clientX, e.clientY);
+      if (propsRef.current.interactionMode === "pencil") {
+        controls.enabled = false;
+        const pt = raycastFloorPoint(e.clientX, e.clientY);
+        activePencilPoints = [pt];
+        return;
+      }
+
       if (placedGroups.length > 0) {
         const rect = renderer.domElement.getBoundingClientRect();
         ndc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -1727,6 +1791,19 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
     };
 
     const onPointerMove = (e: PointerEvent) => {
+      if (activePencilPoints) {
+        const pt = raycastFloorPoint(e.clientX, e.clientY);
+        const prev = activePencilPoints[activePencilPoints.length - 1];
+        if (!prev || Math.hypot(pt.x - prev.x, pt.z - prev.z) > 0.08) {
+          if (activePencilPoints.length < 180) {
+            activePencilPoints.push(pt);
+            drawStrokeGroup(activePencilRoot, [activePencilPoints]);
+            requestRender();
+          }
+        }
+        return;
+      }
+
       if (!draggingFurnitureGroup || !draggingFurnitureId) return;
       const pt = raycastFloorPoint(e.clientX, e.clientY);
       draggingFurnitureGroup.position.set(pt.x, 0, pt.z);
@@ -1734,6 +1811,18 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
     };
 
     const onPointerUp = (e: PointerEvent) => {
+      if (activePencilPoints) {
+        const finished = activePencilPoints;
+        activePencilPoints = null;
+        disposeGroup(activePencilRoot);
+        activePencilRoot.clear();
+        if (finished.length >= 2) {
+          propsRef.current.onAddPencilStroke?.(finished);
+        }
+        requestRender();
+        return;
+      }
+
       if (draggingFurnitureId && draggingFurnitureGroup) {
         propsRef.current.onMovePlacedFurniture?.(
           draggingFurnitureId,
@@ -1742,7 +1831,7 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
         );
         draggingFurnitureId = null;
         draggingFurnitureGroup = null;
-        controls.enabled = true;
+        controls.enabled = propsRef.current.interactionMode !== "pencil";
         return;
       }
 
@@ -1869,6 +1958,14 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
   useEffect(() => {
     sceneApiRef.current?.rebuildPlacedFurniture();
   }, [placedFurniture, selectedFurnitureInstanceId]);
+
+  useEffect(() => {
+    sceneApiRef.current?.rebuildPencilStrokes();
+  }, [pencilStrokes]);
+
+  useEffect(() => {
+    sceneApiRef.current?.setInteractionMode(interactionMode);
+  }, [interactionMode]);
 
   useEffect(() => {
     if (!draggedSwatchLabel) {
