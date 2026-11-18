@@ -356,6 +356,8 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
     ) => "upper" | "lower" | "island" | "countertop" | "backsplash" | null;
   } | null>(null);
 
+  const [webglUnavailable, setWebglUnavailable] = useState(false);
+
   useEffect(() => {
     const container = mountRef.current;
     if (!container) return;
@@ -371,10 +373,16 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
     const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 60);
     camera.position.set(5.4, 3.6, 5.8);
 
-    const renderer = new THREE.WebGLRenderer({
-      antialias: !isSoftwareGl,
-      powerPreference: "high-performance",
-    });
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        antialias: !isSoftwareGl,
+        powerPreference: "high-performance",
+      });
+    } catch {
+      setWebglUnavailable(true);
+      return;
+    }
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.08;
@@ -1577,6 +1585,16 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
       onDrop={handleDrop}
     >
       <div ref={mountRef} className="w-full h-full touch-none" />
+      {webglUnavailable && (
+        <div role="status" className="absolute inset-0 grid place-content-center px-6 text-center">
+          <div className="max-w-sm rounded-xl border border-black/10 bg-white/95 p-5">
+            <p className="font-semibold text-[#141517]">3D preview unavailable</p>
+            <p className="mt-2 text-sm text-[#54575a]">
+              This browser could not start WebGL. You can still browse plans and change design options.
+            </p>
+          </div>
+        </div>
+      )}
       {draggedSwatchLabel && (
         <div className="pointer-events-none absolute inset-0 border-2 border-dashed border-[#B45309]/70 flex items-start justify-center pt-16 sm:pt-5">
           <div className="bg-[#141517] text-white text-xs font-medium px-3.5 py-2 rounded-lg shadow-md">
