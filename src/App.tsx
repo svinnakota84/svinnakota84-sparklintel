@@ -40,6 +40,7 @@ import {
   SubscriptionTier,
   VastuBuyerProfile,
 } from "./types";
+import { LayoutEditor } from "./components/LayoutEditor";
 import { StudioWorkspace } from "./components/StudioWorkspace";
 import { ConstructionPlansView } from "./components/ConstructionPlansView";
 import { CastingStudioView } from "./components/CastingStudioView";
@@ -368,6 +369,14 @@ export default function App() {
 
       {/* Main Content Stage */}
       <main className="flex-1">
+        {(activeTab === "studio" || activeTab === "casting") && (
+          <LayoutEditor
+            key={activeTab}
+            mode={activeTab === "studio" ? "interior" : "casting"}
+            preview={isSubscribed}
+            onPlans={() => setActiveTab("pricing")}
+          />
+        )}
         {activeTab === "studio" && (
           <StudioWorkspace
             selectedPlan={selectedPlan}
