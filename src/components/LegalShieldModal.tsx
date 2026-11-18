@@ -21,8 +21,8 @@ export function VendorTerms() {
         interactive 3D visualization tools and informational links to external
         furniture websites (including{" "}
         <em>georgebuildings.com</em>, <em>sophiakeyfurniture.store</em>, and
-        brand social showcases). Any furniture, fixture, or material order you
-        place on or through a third-party vendor&apos;s store is a{" "}
+        brand social showcases). Any furniture, fixture, stone, or material
+        order you place on or through a third-party vendor&apos;s store is a{" "}
         <strong className="text-[#141517]">
           direct contract strictly between you (Buyer) and that independent
           Vendor (Seller)
@@ -61,8 +61,18 @@ export function VendorTerms() {
         likewise covenant not to sue, implead, join, or demand indemnification or
         payment contribution from Radiant Spark LLC for customer disputes,
         cancelled orders, transit losses, non-payment, or warranty claims.
-        Nothing herein waives non-excludable mandatory statutory rights or alters
-        obligations separately signed in writing by Radiant Spark LLC.
+      </p>
+      <p>
+        <strong className="text-[#141517]">
+          4. Contractor, Fabrication &amp; Local Approval Separation:
+        </strong>{" "}
+        Unless a separate signed turnkey construction agreement is executed with
+        Radiant Spark LLC, independent civil contractors, modular/prefab
+        erectors, and site fabricators remain solely responsible for local
+        municipal approvals, labor safety, site concrete curing, and final
+        workmanship—neither customers nor contractors/suppliers may bring
+        site-execution or defect claims against our digital design platform.
+        Nothing herein waives non-excludable mandatory statutory rights.
       </p>
     </div>
   );

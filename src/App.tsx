@@ -53,12 +53,14 @@ import { VastuAstrologyAdvisor } from "./components/VastuAstrologyAdvisor";
 import { SubscriptionView } from "./components/SubscriptionView";
 import { NegotiationModal } from "./components/NegotiationModal";
 import { CustomerAIAgentDrawer } from "./components/CustomerAIAgentDrawer";
+import { ClientProofPortfolio } from "./components/ClientProofPortfolio";
 import {
   LegalSectionId,
   LegalShieldModal,
 } from "./components/LegalShieldModal";
 
 const STORAGE_TIER_KEY = "sparklintel_subscription_tier";
+const STORAGE_BRIEF_KEY = "sparklintel_saved_brief_v1";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<AppTab>("studio");
@@ -85,6 +87,41 @@ export default function App() {
       return "free";
     }
   );
+
+  const [savedBriefMap, setSavedBriefMap] = useState<Record<string, string>>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_BRIEF_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+          return parsed;
+        }
+      }
+    } catch {
+      // Ignore storage errors
+    }
+    return {};
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_BRIEF_KEY, JSON.stringify(savedBriefMap));
+    } catch {
+      // Ignore storage errors
+    }
+  }, [savedBriefMap]);
+
+  const handleToggleSaveBrief = (projectId: string, projectTitle: string) => {
+    setSavedBriefMap((prev) => {
+      const next = { ...prev };
+      if (next[projectId]) {
+        delete next[projectId];
+      } else {
+        next[projectId] = projectTitle;
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     try {
@@ -564,7 +601,7 @@ export default function App() {
         )}
 
         {(activeTab === "studio" || activeTab === "casting") && (
-          <div className="pb-10">
+          <div className="pb-4">
             <LayoutEditor
               key={activeTab}
               mode={activeTab === "studio" ? "interior" : "casting"}
@@ -572,6 +609,21 @@ export default function App() {
               onPlans={() => setActiveTab("pricing")}
             />
           </div>
+        )}
+
+        {(activeTab === "studio" ||
+          activeTab === "plans" ||
+          activeTab === "casting") && (
+          <ClientProofPortfolio
+            savedBriefIds={Object.keys(savedBriefMap)}
+            onToggleSaveBrief={handleToggleSaveBrief}
+            onNavigateTab={(tab) => {
+              setActiveTab(tab);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            onOpenNegotiation={() => setNegotiationOpen(true)}
+            onOpenLegalShield={() => openLegal("vendors")}
+          />
         )}
       </main>
 
@@ -665,6 +717,7 @@ export default function App() {
           CASTING_SYSTEMS.find((s) => s.id === castingMethodId)?.name ??
           castingMethodId
         } (${castingFloors}F × ${castingBays} Bays, ${concreteFinish.name})`}
+        savedBriefStyles={Object.values(savedBriefMap)}
       />
 
       {/* Mobile Bottom Thumb-Zone Navigation Bar */}

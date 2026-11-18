@@ -10,6 +10,7 @@ interface NegotiationModalProps {
   exteriorSummary: string;
   castingSummary?: string;
   vastuFacing: string;
+  savedBriefStyles?: string[];
 }
 
 export const NegotiationModal: React.FC<NegotiationModalProps> = ({
@@ -21,6 +22,7 @@ export const NegotiationModal: React.FC<NegotiationModalProps> = ({
   exteriorSummary,
   castingSummary,
   vastuFacing,
+  savedBriefStyles = [],
 }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -104,6 +106,9 @@ export const NegotiationModal: React.FC<NegotiationModalProps> = ({
               <p>Spark Interior: {interiorSummary}</p>
               <p>Spark Construction: {exteriorSummary}</p>
               {castingSummary && <p>3D Casting: {castingSummary}</p>}
+              {savedBriefStyles.length > 0 && (
+                <p>Saved Portfolio Styles: {savedBriefStyles.join(", ")}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
