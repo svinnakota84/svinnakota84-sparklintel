@@ -26,6 +26,7 @@ interface AdvisorContextInput {
   lowerFinish?: string;
   countertop?: string;
   hardware?: string;
+  castingSummary?: string;
   subscriptionTier?: string;
   buyerProfile?: {
     plotFacing?: string;
@@ -97,6 +98,7 @@ You help homebuyers, commercial developers, and homeowners evaluate:
 ACTIVE CUSTOMER STUDIO CONTEXT:
 - Selected Construction Plan: ${ctx.planName ?? "Surya Courtyard Villa"} (${ctx.planFacing ?? "North"}-facing, ${ctx.planAreaSqFt ?? 2450} sq ft, Vastu Score ${ctx.vastuScore ?? 96}%)
 - Active 3D Kitchen Configuration: Layout ${ctx.kitchenLayout ?? "L-Shape + Island"}, Palette "${ctx.cabinetPalette ?? "Alabaster & Warm Oak"}", Upper: ${ctx.upperFinish ?? "Alabaster"}, Lower: ${ctx.lowerFinish ?? "Warm Oak"}, Countertop: ${ctx.countertop ?? "Calacatta Quartz"}, Hardware: ${ctx.hardware ?? "Brushed Brass"}
+- Active 3D Building Casting Configuration: ${ctx.castingSummary ?? "Residential GFRC Sculptural Arches"}
 - Subscription Plan: ${ctx.subscriptionTier ?? "Starter"}
 
 HOMEBUYER VASTU & JYOTISH PROFILE:

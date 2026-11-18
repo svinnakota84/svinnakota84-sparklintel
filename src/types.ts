@@ -2,6 +2,14 @@ export type AppTab = "studio" | "plans" | "casting" | "advisor" | "pricing";
 
 export type BuildingSector = "residential" | "commercial";
 
+export type CastStructureForm =
+  | "building-frame"
+  | "perimeter-walls"
+  | "curved-pavilion"
+  | "courtyard-l-wing"
+  | "waffle-atrium"
+  | "cantilever-bridge";
+
 export type CastingMethodId =
   | "monolithic-rcc"
   | "precast-panels"
@@ -149,6 +157,47 @@ export interface FurnitureOption {
   styleVariant: "a" | "b" | "c";
   priceUsd: number;
   proOnly: boolean;
+}
+
+export type PlaceableFurnitureShape =
+  | "boucle-sofa"
+  | "travertine-dining"
+  | "swivel-chair"
+  | "fluted-credenza"
+  | "travertine-coffee"
+  | "vitrine-wardrobe"
+  | "console-bench"
+  | "olive-tree"
+  | "barstool-pair"
+  | "mohair-sectional";
+
+export interface PlaceableFurnitureSpec {
+  id: string;
+  name: string;
+  collection: "Sophia Key Designer" | "George Buildings" | "Spark Studio";
+  shape: PlaceableFurnitureShape;
+  dimensions: string;
+  materialNote: string;
+  primaryHex: string;
+  accentHex: string;
+  isWood?: boolean;
+  defaultX: number;
+  defaultZ: number;
+  proOnly: boolean;
+}
+
+export interface PlacedFurnitureInstance {
+  instanceId: string;
+  specId: string;
+  name: string;
+  collection: string;
+  shape: PlaceableFurnitureShape;
+  primaryHex: string;
+  accentHex: string;
+  isWood?: boolean;
+  x: number;
+  z: number;
+  rotationY: number;
 }
 
 export interface PlanRoom {

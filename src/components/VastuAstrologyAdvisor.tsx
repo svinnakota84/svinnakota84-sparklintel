@@ -14,6 +14,7 @@ import {
   SubscriptionTier,
   VastuBuyerProfile,
 } from "../types";
+import { generateLocalAdvisorReply } from "../utils/advisorFallback";
 
 interface VastuAstrologyAdvisorProps {
   selectedPlan: ConstructionPlan;
@@ -30,6 +31,7 @@ interface VastuAstrologyAdvisorProps {
 
 const STARTER_QUESTIONS = [
   "Is this house facing & South-East kitchen auspicious for my Rashi when buying?",
+  "Can Spark&Lintel cast a commercial building or monolithic GFRC villa?",
   "Which cabinet colors and stone match Agneya (SE) Vastu energy in 3D?",
   "What structural column and beam checks should I verify before buying an under-construction villa?",
   "My prospective flat has a North-West or North-East kitchen — what non-structural remedies work?",
@@ -135,6 +137,21 @@ export const VastuAstrologyAdvisor: React.FC<VastuAstrologyAdvisorProps> = ({
       scrollEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 50);
 
+    const contextPayload = {
+      planName: selectedPlan.name,
+      planFacing: selectedPlan.facing,
+      planAreaSqFt: selectedPlan.areaSqFt,
+      vastuScore: selectedPlan.vastuScore,
+      kitchenLayout,
+      cabinetPalette: activeCombo.name,
+      upperFinish: upperFinish.name,
+      lowerFinish: lowerFinish.name,
+      countertop: countertopFinish.name,
+      hardware: hardwareFinish.name,
+      subscriptionTier,
+      buyerProfile,
+    };
+
     try {
       const response = await fetch("/api/advisor", {
         method: "POST",
@@ -144,26 +161,18 @@ export const VastuAstrologyAdvisor: React.FC<VastuAstrologyAdvisorProps> = ({
             role: m.role,
             content: m.content,
           })),
-          context: {
-            planName: selectedPlan.name,
-            planFacing: selectedPlan.facing,
-            planAreaSqFt: selectedPlan.areaSqFt,
-            vastuScore: selectedPlan.vastuScore,
-            kitchenLayout,
-            cabinetPalette: activeCombo.name,
-            upperFinish: upperFinish.name,
-            lowerFinish: lowerFinish.name,
-            countertop: countertopFinish.name,
-            hardware: hardwareFinish.name,
-            subscriptionTier,
-            buyerProfile,
-          },
+          context: contextPayload,
         }),
       });
 
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        throw new Error("STATIC_MODE");
+      }
+
       const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data?.error || `Request failed (${response.status})`);
+      if (!response.ok || !data?.reply) {
+        throw new Error(data?.error || "STATIC_MODE");
       }
 
       const aiMsg: AdvisorMessage = {
@@ -179,12 +188,21 @@ export const VastuAstrologyAdvisor: React.FC<VastuAstrologyAdvisorProps> = ({
       setTimeout(() => {
         scrollEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 60);
-    } catch (err: unknown) {
-      setErrorMsg(
-        err instanceof Error
-          ? err.message
-          : "Unable to reach the Vastu & Engineering Advisor right now."
-      );
+    } catch {
+      const fallbackReply = generateLocalAdvisorReply(trimmed, contextPayload);
+      const aiMsg: AdvisorMessage = {
+        id: `a-${Date.now()}`,
+        role: "assistant",
+        content: fallbackReply,
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+      setMessages((prev) => [...prev, aiMsg]);
+      setTimeout(() => {
+        scrollEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 60);
     } finally {
       setIsLoading(false);
     }
@@ -207,8 +225,8 @@ export const VastuAstrologyAdvisor: React.FC<VastuAstrologyAdvisorProps> = ({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6 items-start">
-        {/* Left Column: Buyer Kundali & Vastu Profile */}
-        <div className="lg:col-span-4 space-y-4">
+        {/* Buyer Kundali & Vastu Profile (Second on Mobile so Chat appears immediately) */}
+        <div className="order-2 lg:order-1 lg:col-span-4 space-y-4">
           <div className="bg-white rounded-2xl border border-black/8 p-5 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-[#141517] flex items-center gap-2">
@@ -358,8 +376,8 @@ export const VastuAstrologyAdvisor: React.FC<VastuAstrologyAdvisorProps> = ({
           </div>
         </div>
 
-        {/* Right Column: Interactive Gemini Advisor */}
-        <div className="lg:col-span-8 bg-white rounded-2xl border border-black/8 flex flex-col h-[520px] sm:h-[640px] overflow-hidden">
+        {/* Interactive Gemini Advisor (First on Mobile) */}
+        <div className="order-1 lg:order-2 lg:col-span-8 bg-white rounded-2xl border border-black/8 flex flex-col h-[480px] sm:h-[640px] overflow-hidden">
           {/* Quick Prompts */}
           <div className="px-4 py-3 border-b border-black/8 bg-[#FAF9F6]">
             <p className="text-[11px] font-medium text-[#78716C] mb-2">

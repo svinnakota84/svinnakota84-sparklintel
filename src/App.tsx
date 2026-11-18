@@ -11,6 +11,7 @@ import {
   BACKSPLASH_FINISHES,
   CABINET_COLOR_COMBOS,
   CABINET_FINISHES,
+  CAST_STRUCTURE_FORMS,
   CASTING_FINISHES,
   CASTING_SYSTEMS,
   CONSTRUCTION_PLANS,
@@ -18,6 +19,7 @@ import {
   EXTERIOR_FINISHES,
   FURNITURE_OPTIONS,
   HARDWARE_FINISHES,
+  PLACEABLE_FURNITURE_CATALOG,
 } from "./data/catalog";
 import {
   AppTab,
@@ -31,12 +33,15 @@ import {
   CastingMaterialSpec,
   CastingMethodId,
   CastingProjectPreset,
+  CastStructureForm,
   ConstructionPlan,
   ExteriorDropZone,
   ExteriorMaterialSpec,
   FurnitureOption,
   InteriorDropZone,
   KitchenLayoutType,
+  PlaceableFurnitureSpec,
+  PlacedFurnitureInstance,
   SubscriptionTier,
   VastuBuyerProfile,
 } from "./types";
@@ -47,6 +52,7 @@ import { CastingStudioView } from "./components/CastingStudioView";
 import { VastuAstrologyAdvisor } from "./components/VastuAstrologyAdvisor";
 import { SubscriptionView } from "./components/SubscriptionView";
 import { NegotiationModal } from "./components/NegotiationModal";
+import { CustomerAIAgentDrawer } from "./components/CustomerAIAgentDrawer";
 import {
   LegalSectionId,
   LegalShieldModal,
@@ -149,6 +155,8 @@ export default function App() {
   );
 
   // 3D Structural & Architectural Casting State
+  const [castingStructureForm, setCastingStructureForm] =
+    useState<CastStructureForm>("building-frame");
   const [castingSector, setCastingSector] =
     useState<BuildingSector>("residential");
   const [castingMethodId, setCastingMethodId] =
@@ -186,6 +194,29 @@ export default function App() {
   const [lightingOption, setLightingOption] = useState<FurnitureOption>(
     () => FURNITURE_OPTIONS.find((f) => f.category === "lighting")!
   );
+
+  // Subscribed Custom Drag-and-Drop Furniture Collection (Sophia Key & George Buildings)
+  const [placedFurniture, setPlacedFurniture] = useState<
+    PlacedFurnitureInstance[]
+  >(() =>
+    PLACEABLE_FURNITURE_CATALOG.filter((item) => !item.proOnly).map(
+      (spec, idx) => ({
+        instanceId: `seed-${spec.id}-${idx}`,
+        specId: spec.id,
+        name: spec.name,
+        collection: spec.collection,
+        shape: spec.shape,
+        primaryHex: spec.primaryHex,
+        accentHex: spec.accentHex,
+        isWood: spec.isWood,
+        x: spec.defaultX,
+        z: spec.defaultZ,
+        rotationY: 0,
+      })
+    )
+  );
+  const [selectedFurnitureInstanceId, setSelectedFurnitureInstanceId] =
+    useState<string | null>(null);
 
   const [buyerProfile, setBuyerProfile] = useState<VastuBuyerProfile>({
     plotFacing: "North",
@@ -270,6 +301,66 @@ export default function App() {
     if (item.category === "lighting") setLightingOption(item);
   };
 
+  const handleAddPlacedFurniture = (
+    spec: PlaceableFurnitureSpec,
+    x?: number,
+    z?: number
+  ) => {
+    const offset = (placedFurniture.length % 4) * 0.25;
+    const newInst: PlacedFurnitureInstance = {
+      instanceId: `furn-${spec.id}-${Date.now()}`,
+      specId: spec.id,
+      name: spec.name,
+      collection: spec.collection,
+      shape: spec.shape,
+      primaryHex: spec.primaryHex,
+      accentHex: spec.accentHex,
+      isWood: spec.isWood,
+      x:
+        x !== undefined
+          ? Math.max(-5.8, Math.min(3.1, Number(x.toFixed(2))))
+          : Number((spec.defaultX + offset).toFixed(2)),
+      z:
+        z !== undefined
+          ? Math.max(-0.8, Math.min(5.2, Number(z.toFixed(2))))
+          : Number((spec.defaultZ + offset).toFixed(2)),
+      rotationY: 0,
+    };
+    setPlacedFurniture((prev) => [...prev, newInst]);
+    setSelectedFurnitureInstanceId(newInst.instanceId);
+  };
+
+  const handleMovePlacedFurniture = (
+    instanceId: string,
+    x: number,
+    z: number
+  ) => {
+    setPlacedFurniture((prev) =>
+      prev.map((item) =>
+        item.instanceId === instanceId ? { ...item, x, z } : item
+      )
+    );
+  };
+
+  const handleRotatePlacedFurniture = (instanceId: string) => {
+    setPlacedFurniture((prev) =>
+      prev.map((item) =>
+        item.instanceId === instanceId
+          ? { ...item, rotationY: item.rotationY + Math.PI / 4 }
+          : item
+      )
+    );
+  };
+
+  const handleRemovePlacedFurniture = (instanceId: string) => {
+    setPlacedFurniture((prev) =>
+      prev.filter((item) => item.instanceId !== instanceId)
+    );
+    setSelectedFurnitureInstanceId((curr) =>
+      curr === instanceId ? null : curr
+    );
+  };
+
   const handleLoadPlanIn3D = (
     plan: ConstructionPlan,
     targetLayout: KitchenLayoutType
@@ -300,11 +391,11 @@ export default function App() {
   return (
     <div className="min-h-dvh flex flex-col bg-[#F8F7F4] text-[#141517]">
       {/* Strict 3-Zone Top Bar Contract */}
-      <header className="h-[52px] md:h-[64px] bg-white border-b border-black/8 px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-3 md:gap-8 shrink-0">
+      <header className="h-[52px] md:h-[64px] bg-white border-b border-black/8 px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2 md:gap-8 shrink-0">
         {/* Zone 1: Single-line Brand Wordmark */}
         <button
           onClick={() => setActiveTab("studio")}
-          className="font-display text-[15px] sm:text-lg font-bold tracking-tight text-[#141517] whitespace-nowrap shrink-0 truncate max-w-[215px] sm:max-w-none cursor-pointer"
+          className="font-display text-[13.5px] sm:text-lg font-bold tracking-tight text-[#141517] whitespace-nowrap shrink-0 cursor-pointer"
         >
           Spark&amp;Lintel Design-Builders
         </button>
@@ -342,7 +433,7 @@ export default function App() {
         <div className="shrink-0">
           <button
             onClick={() => setActiveTab("pricing")}
-            className={`min-h-[38px] px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-[11px] sm:text-xs font-semibold inline-flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+            className={`min-h-[36px] sm:min-h-[38px] px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg text-[11px] sm:text-xs font-semibold inline-flex items-center gap-1 sm:gap-1.5 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
               isSubscribed
                 ? "bg-[#EFECE6] text-[#92400E] hover:bg-[#E5E0D5]"
                 : "bg-[#141517] text-white hover:bg-[#292B2F]"
@@ -399,6 +490,13 @@ export default function App() {
             sofaOption={sofaOption}
             lightingOption={lightingOption}
             onSelectFurniture={handleSelectFurniture}
+            placedFurniture={placedFurniture}
+            selectedFurnitureInstanceId={selectedFurnitureInstanceId}
+            onSelectPlacedFurniture={setSelectedFurnitureInstanceId}
+            onAddPlacedFurniture={handleAddPlacedFurniture}
+            onMovePlacedFurniture={handleMovePlacedFurniture}
+            onRotatePlacedFurniture={handleRotatePlacedFurniture}
+            onRemovePlacedFurniture={handleRemovePlacedFurniture}
             onOpenSubscription={() => setActiveTab("pricing")}
             onAskVastuAI={() => setActiveTab("advisor")}
             onOpenNegotiation={() => setNegotiationOpen(true)}
@@ -425,6 +523,8 @@ export default function App() {
           <CastingStudioView
             subscriptionTier={subscriptionTier}
             onOpenPricing={() => setActiveTab("pricing")}
+            structureForm={castingStructureForm}
+            onChangeStructureForm={setCastingStructureForm}
             sector={castingSector}
             onChangeSector={setCastingSector}
             methodId={castingMethodId}
@@ -517,6 +617,34 @@ export default function App() {
         onClose={() => setLegalOpen(false)}
       />
 
+      {/* Persistent Floating AI Customer Q&A Agent */}
+      <CustomerAIAgentDrawer
+        hidden={activeTab === "advisor"}
+        selectedPlan={selectedPlan}
+        kitchenLayout={layout}
+        activeCombo={activeCombo}
+        upperFinish={upperFinish}
+        lowerFinish={lowerFinish}
+        countertopFinish={countertopFinish}
+        hardwareFinish={hardwareFinish}
+        castingContext={{
+          sector: castingSector,
+          methodName: `${
+            CAST_STRUCTURE_FORMS.find((f) => f.id === castingStructureForm)
+              ?.name ?? castingStructureForm
+          } · ${
+            CASTING_SYSTEMS.find((s) => s.id === castingMethodId)?.name ??
+            castingMethodId
+          }`,
+          floors: castingFloors,
+          bays: castingBays,
+          concreteFinish: concreteFinish.name,
+        }}
+        subscriptionTier={subscriptionTier}
+        buyerProfile={buyerProfile}
+        onOpenFullAdvisor={() => setActiveTab("advisor")}
+      />
+
       {/* Negotiation Proposal Modal */}
       <NegotiationModal
         isOpen={negotiationOpen}
@@ -524,9 +652,12 @@ export default function App() {
         planName={selectedPlan.name}
         planAreaSqFt={selectedPlan.areaSqFt}
         vastuFacing={selectedPlan.facing}
-        interiorSummary={`${activeCombo.name} (${upperFinish.name} / ${lowerFinish.name}, ${countertopFinish.name})`}
+        interiorSummary={`${activeCombo.name} (${upperFinish.name} / ${lowerFinish.name}, ${countertopFinish.name}) + ${placedFurniture.length} Placed Pieces`}
         exteriorSummary={`${facadeFinish.name} facade, ${claddingFinish.name}, ${timberFinish.name}`}
         castingSummary={`${castingSector.toUpperCase()} · ${
+          CAST_STRUCTURE_FORMS.find((f) => f.id === castingStructureForm)
+            ?.name ?? castingStructureForm
+        } · ${
           CASTING_SYSTEMS.find((s) => s.id === castingMethodId)?.name ??
           castingMethodId
         } (${castingFloors}F × ${castingBays} Bays, ${concreteFinish.name})`}

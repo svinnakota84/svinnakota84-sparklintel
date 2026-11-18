@@ -11,6 +11,7 @@ import {
   Sofa,
 } from "lucide-react";
 import {
+  CAST_STRUCTURE_FORMS,
   CASTING_FINISHES,
   CASTING_PROJECT_PRESETS,
   CASTING_SYSTEMS,
@@ -23,6 +24,7 @@ import {
   CastingMaterialSpec,
   CastingMethodId,
   CastingProjectPreset,
+  CastStructureForm,
   SubscriptionTier,
 } from "../types";
 import { Casting3DViewer } from "./Casting3DViewer";
@@ -30,6 +32,8 @@ import { Casting3DViewer } from "./Casting3DViewer";
 interface CastingStudioViewProps {
   subscriptionTier: SubscriptionTier;
   onOpenPricing: () => void;
+  structureForm: CastStructureForm;
+  onChangeStructureForm: (form: CastStructureForm) => void;
   sector: BuildingSector;
   onChangeSector: (sector: BuildingSector) => void;
   methodId: CastingMethodId;
@@ -54,6 +58,8 @@ interface CastingStudioViewProps {
 export const CastingStudioView: React.FC<CastingStudioViewProps> = ({
   subscriptionTier,
   onOpenPricing,
+  structureForm,
+  onChangeStructureForm,
   sector,
   onChangeSector,
   methodId,
@@ -193,25 +199,26 @@ export const CastingStudioView: React.FC<CastingStudioViewProps> = ({
       ? mullionFinish
       : lobbyInteriorFinish;
 
+  const activeStructureMeta =
+    CAST_STRUCTURE_FORMS.find((f) => f.id === structureForm) ??
+    CAST_STRUCTURE_FORMS[0];
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 lg:pb-14 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 lg:pb-14 space-y-6">
       {/* Header Banner Communicating Commercial & Residential Capabilities */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-6 border-b border-black/8">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-5 border-b border-black/8">
         <div>
           <p className="text-xs font-mono text-[#B45309] tracking-wide">
-            Any Kind of Building Casting · Commercial Towers &amp; Custom
-            Residences
+            Any Kind of Casting: Buildings, Boundary Walls, Curved Shells &amp; Spans
           </p>
           <h1 className="font-display text-2xl sm:text-3xl font-semibold text-[#141517] mt-1">
             3D Architectural Casting &amp; Structural Design Studio
           </h1>
           <p className="text-sm text-[#57534E] mt-1.5 max-w-3xl leading-relaxed">
-            Spark&amp;Lintel Design-Builders executes every type of building
-            casting—from monolithic RCC villas, GFRC sculptural arches, and
-            waffle-slab pavilions to multi-story commercial precast towers and
-            post-tensioned showrooms. Configure your 3D structure below, pair
-            full-height glazing and sculptural furniture staging, and negotiate
-            1-on-1 after finalizing your design.
+            Spark&amp;Lintel Design-Builders casts every type of commercial and
+            residential structure—from architectural perimeter &amp; feature
+            walls, curved GFRC shells, L-courtyard villas, and waffle-slab
+            halls to cantilevered sky-bridges and multi-story precast buildings.
           </p>
         </div>
 
@@ -251,6 +258,41 @@ export const CastingStudioView: React.FC<CastingStudioViewProps> = ({
         </div>
       </div>
 
+      {/* Structure Type Selector: Not just 1 building — Walls, Shells, Courtyards, Halls & Bridges */}
+      <section className="space-y-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs font-semibold text-[#141517]">
+            1. Choose Any 3D Cast Structure Type (Walls, Shells, Courtyards or Multi-Story Buildings)
+          </p>
+          <span className="text-[11px] font-mono text-[#92400E]">
+            Active: {activeStructureMeta.name}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+          {CAST_STRUCTURE_FORMS.map((form) => {
+            const active = structureForm === form.id;
+            return (
+              <button
+                key={form.id}
+                onClick={() => onChangeStructureForm(form.id)}
+                className={`text-left p-3 rounded-xl border transition-all cursor-pointer ${
+                  active
+                    ? "border-[#B45309] bg-white shadow-sm"
+                    : "border-black/8 bg-white/75 hover:bg-white hover:border-black/20"
+                }`}
+              >
+                <p className="text-xs font-semibold text-[#141517] leading-snug">
+                  {form.name}
+                </p>
+                <p className="text-[11px] text-[#57534E] mt-1 leading-snug">
+                  {form.subtitle}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
       {/* Main 3D Structure Configurator + Material Drag-Drop Studio */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         {/* Left 8 cols: 3D Casting Viewport & Structural Geometry Controls */}
@@ -259,10 +301,9 @@ export const CastingStudioView: React.FC<CastingStudioViewProps> = ({
             <div className="flex items-center gap-2 text-xs font-semibold text-[#141517]">
               <Layers className="w-4 h-4 text-[#B45309]" />
               <span>
-                {sector === "commercial"
-                  ? "Commercial Building Casting"
-                  : "Residential Building Casting"}{" "}
-                · {activeSystem.name} ({floors}F × {bays} Bays)
+                {activeStructureMeta.name} ·{" "}
+                {sector === "commercial" ? "Commercial" : "Residential"} ·{" "}
+                {activeSystem.name} ({floors}F × {bays} Bays)
               </span>
             </div>
             <button
@@ -282,6 +323,7 @@ export const CastingStudioView: React.FC<CastingStudioViewProps> = ({
 
           <div className="relative h-[340px] sm:h-[490px] w-full">
             <Casting3DViewer
+              structureForm={structureForm}
               sector={sector}
               methodId={methodId}
               facadeProfile={facadeProfile}

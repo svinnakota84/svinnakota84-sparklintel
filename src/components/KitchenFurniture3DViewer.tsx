@@ -8,6 +8,7 @@ import {
   CameraPreset,
   FurnitureOption,
   KitchenLayoutType,
+  PlacedFurnitureInstance,
 } from "../types";
 import {
   getFloorPlankTexture,
@@ -37,6 +38,12 @@ export interface Kitchen3DViewerProps {
   onSelectZone?: (zone: "upper" | "lower" | "island" | "furniture") => void;
   draggedSwatchLabel?: string | null;
   onDropAtZone?: (zone: "upper" | "lower" | "island" | "countertop" | "backsplash") => void;
+  placedFurniture?: PlacedFurnitureInstance[];
+  selectedFurnitureInstanceId?: string | null;
+  onSelectPlacedFurniture?: (instanceId: string | null) => void;
+  onMovePlacedFurniture?: (instanceId: string, x: number, z: number) => void;
+  draggedFurnitureName?: string | null;
+  onDropNewFurnitureAt?: (x: number, z: number) => void;
 }
 
 const CAMERA_TARGETS: Record<
@@ -275,6 +282,191 @@ function buildCabinetDoorGroup(
   return pivot;
 }
 
+function buildPlacedFurnitureMesh(
+  item: PlacedFurnitureInstance,
+  isSelected: boolean,
+  maxAnisotropy: number
+): THREE.Group {
+  const grp = new THREE.Group();
+  grp.position.set(item.x, 0, item.z);
+  grp.rotation.y = item.rotationY;
+  grp.userData.instanceId = item.instanceId;
+
+  const primaryMat = item.isWood
+    ? new THREE.MeshStandardMaterial({
+        map: getWoodTexture(item.primaryHex, "#3A2417", true, maxAnisotropy),
+        roughness: 0.48,
+      })
+    : new THREE.MeshStandardMaterial({
+        color: item.primaryHex,
+        roughness: 0.72,
+        metalness: 0.04,
+      });
+
+  const accentMat = new THREE.MeshStandardMaterial({
+    color: item.accentHex,
+    roughness: 0.38,
+    metalness: item.shape === "vitrine-wardrobe" ? 0.65 : 0.25,
+  });
+
+  const tagMesh = (m: THREE.Object3D) => {
+    m.userData.instanceId = item.instanceId;
+    if ((m as THREE.Mesh).isMesh) {
+      m.castShadow = true;
+      m.receiveShadow = true;
+    }
+    grp.add(m);
+  };
+
+  if (item.shape === "boucle-sofa" || item.shape === "mohair-sectional") {
+    const base = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.12, 0.92), accentMat);
+    base.position.set(0, 0.08, 0);
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.26, 0.88), primaryMat);
+    seat.position.set(0, 0.27, 0);
+    const back = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.42, 0.22), primaryMat);
+    back.position.set(0, 0.56, -0.33);
+    tagMesh(base);
+    tagMesh(seat);
+    tagMesh(back);
+    if (item.shape === "mohair-sectional") {
+      const chaise = new THREE.Mesh(
+        new THREE.BoxGeometry(0.85, 0.26, 0.95),
+        primaryMat
+      );
+      chaise.position.set(-0.6, 0.27, 0.82);
+      tagMesh(chaise);
+    }
+  } else if (item.shape === "travertine-dining") {
+    const stoneMat = new THREE.MeshStandardMaterial({
+      map: getMarbleTexture(item.primaryHex, item.accentHex, maxAnisotropy),
+      roughness: 0.34,
+    });
+    const ped = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.28, 0.34, 0.7, 20),
+      stoneMat
+    );
+    ped.position.set(0, 0.35, 0);
+    const top = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.82, 0.82, 0.055, 28),
+      stoneMat
+    );
+    top.position.set(0, 0.73, 0);
+    tagMesh(ped);
+    tagMesh(top);
+  } else if (item.shape === "swivel-chair") {
+    const base = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.28, 0.32, 0.06, 18),
+      accentMat
+    );
+    base.position.set(0, 0.04, 0);
+    const seat = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.38, 0.36, 0.26, 20),
+      primaryMat
+    );
+    seat.position.set(0, 0.28, 0);
+    const back = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.4, 0.4, 0.42, 20, 1, false, Math.PI * 0.65, Math.PI * 1.15),
+      primaryMat
+    );
+    back.position.set(0, 0.56, 0);
+    tagMesh(base);
+    tagMesh(seat);
+    tagMesh(back);
+  } else if (item.shape === "fluted-credenza") {
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.62, 0.48), primaryMat);
+    body.position.set(0, 0.48, 0);
+    const top = new THREE.Mesh(new THREE.BoxGeometry(1.94, 0.04, 0.52), accentMat);
+    top.position.set(0, 0.81, 0);
+    tagMesh(body);
+    tagMesh(top);
+    [-0.82, 0.82].forEach((lx) => {
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.02, 0.18, 8), accentMat);
+      leg.position.set(lx, 0.09, 0);
+      tagMesh(leg);
+    });
+  } else if (item.shape === "travertine-coffee") {
+    const slabMat = new THREE.MeshStandardMaterial({
+      map: getMarbleTexture(item.primaryHex, item.accentHex, maxAnisotropy),
+      roughness: 0.35,
+    });
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.58, 0.06, 24), slabMat);
+    top.scale.set(1.25, 1, 0.85);
+    top.position.set(0, 0.32, 0);
+    const plinth = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.28, 0.42), slabMat);
+    plinth.position.set(0, 0.14, 0);
+    tagMesh(top);
+    tagMesh(plinth);
+  } else if (item.shape === "vitrine-wardrobe") {
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(1.55, 2.2, 0.58), primaryMat);
+    frame.position.set(0, 1.1, 0);
+    const glowPanel = new THREE.Mesh(
+      new THREE.BoxGeometry(1.42, 2.02, 0.03),
+      new THREE.MeshBasicMaterial({ color: "#F2DFC2" })
+    );
+    glowPanel.position.set(0, 1.1, 0.28);
+    const divider = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.1, 0.05), accentMat);
+    divider.position.set(0, 1.1, 0.3);
+    tagMesh(frame);
+    tagMesh(glowPanel);
+    tagMesh(divider);
+  } else if (item.shape === "console-bench") {
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.12, 0.46), primaryMat);
+    seat.position.set(0, 0.44, 0);
+    tagMesh(seat);
+    [-0.58, 0.58].forEach((lx) => {
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.4, 0.4), accentMat);
+      leg.position.set(lx, 0.2, 0);
+      tagMesh(leg);
+    });
+  } else if (item.shape === "barstool-pair") {
+    [-0.36, 0.36].forEach((sx) => {
+      const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.17, 0.06, 16), primaryMat);
+      seat.position.set(sx, 0.64, 0);
+      const back = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.18, 0.05), primaryMat);
+      back.position.set(sx, 0.76, -0.14);
+      const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.62, 10), accentMat);
+      stem.position.set(sx, 0.31, 0);
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.025, 16), accentMat);
+      base.position.set(sx, 0.015, 0);
+      tagMesh(seat);
+      tagMesh(back);
+      tagMesh(stem);
+      tagMesh(base);
+    });
+  } else if (item.shape === "olive-tree") {
+    const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.22, 0.48, 18), accentMat);
+    pot.position.set(0, 0.24, 0);
+    const trunk = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.04, 0.06, 1.15, 8),
+      new THREE.MeshStandardMaterial({ color: "#5C4738", roughness: 0.9 })
+    );
+    trunk.position.set(0, 0.95, 0);
+    const canopyA = new THREE.Mesh(new THREE.SphereGeometry(0.45, 14, 12), primaryMat);
+    canopyA.position.set(0, 1.68, 0);
+    const canopyB = new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 10), primaryMat);
+    canopyB.position.set(0.24, 1.48, 0.14);
+    tagMesh(pot);
+    tagMesh(trunk);
+    tagMesh(canopyA);
+    tagMesh(canopyB);
+  }
+
+  if (isSelected) {
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(0.75, 0.88, 32),
+      new THREE.MeshBasicMaterial({
+        color: "#B45309",
+        side: THREE.DoubleSide,
+      })
+    );
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.y = 0.032;
+    grp.add(ring);
+  }
+
+  return grp;
+}
+
 export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
   layout,
   doorStyle,
@@ -295,6 +487,12 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
   onSelectZone,
   draggedSwatchLabel,
   onDropAtZone,
+  placedFurniture = [],
+  selectedFurnitureInstanceId = null,
+  onSelectPlacedFurniture,
+  onMovePlacedFurniture,
+  draggedFurnitureName = null,
+  onDropNewFurnitureAt,
 }) => {
   const outerRef = useRef<HTMLDivElement | null>(null);
   const mountRef = useRef<HTMLDivElement | null>(null);
@@ -323,6 +521,12 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
     onSelectZone,
     draggedSwatchLabel,
     onDropAtZone,
+    placedFurniture,
+    selectedFurnitureInstanceId,
+    onSelectPlacedFurniture,
+    onMovePlacedFurniture,
+    draggedFurnitureName,
+    onDropNewFurnitureAt,
   });
   propsRef.current = {
     layout,
@@ -344,19 +548,28 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
     onSelectZone,
     draggedSwatchLabel,
     onDropAtZone,
+    placedFurniture,
+    selectedFurnitureInstanceId,
+    onSelectPlacedFurniture,
+    onMovePlacedFurniture,
+    draggedFurnitureName,
+    onDropNewFurnitureAt,
   };
 
   const sceneApiRef = useRef<{
     rebuildDynamicScene: () => void;
+    rebuildPlacedFurniture: () => void;
     triggerCameraPreset: (preset: CameraPreset) => void;
     requestRender: () => void;
     raycastDropZone: (
       clientX: number,
       clientY: number
     ) => "upper" | "lower" | "island" | "countertop" | "backsplash" | null;
+    raycastFloorPoint: (
+      clientX: number,
+      clientY: number
+    ) => { x: number; z: number };
   } | null>(null);
-
-  const [webglUnavailable, setWebglUnavailable] = useState(false);
 
   useEffect(() => {
     const container = mountRef.current;
@@ -373,16 +586,10 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
     const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 60);
     camera.position.set(5.4, 3.6, 5.8);
 
-    let renderer: THREE.WebGLRenderer;
-    try {
-      renderer = new THREE.WebGLRenderer({
-        antialias: !isSoftwareGl,
-        powerPreference: "high-performance",
-      });
-    } catch {
-      setWebglUnavailable(true);
-      return;
-    }
+    const renderer = new THREE.WebGLRenderer({
+      antialias: !isSoftwareGl,
+      powerPreference: "high-performance",
+    });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.08;
@@ -540,6 +747,11 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
     // Dynamic Configurable Group
     const dynamicRoot = new THREE.Group();
     scene.add(dynamicRoot);
+
+    // Draggable Placed Furniture Group
+    const placedRoot = new THREE.Group();
+    scene.add(placedRoot);
+    let placedGroups: THREE.Group[] = [];
 
     // Animation Trackers
     let animatedDoors: { pivot: THREE.Group; sign: number }[] = [];
@@ -1235,7 +1447,25 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
       clickableMeshes.push(loungeGroup);
     };
 
+    const rebuildPlacedFurniture = () => {
+      disposeGroup(placedRoot);
+      placedRoot.clear();
+      placedGroups = [];
+      const items = propsRef.current.placedFurniture ?? [];
+      const selId = propsRef.current.selectedFurnitureInstanceId;
+      items.forEach((item) => {
+        const g = buildPlacedFurnitureMesh(
+          item,
+          item.instanceId === selId,
+          maxAnisotropy
+        );
+        placedRoot.add(g);
+        placedGroups.push(g);
+      });
+    };
+
     rebuildDynamicScene();
+    rebuildPlacedFurniture();
 
     if (!isSoftwareGl) {
       renderer.compile(scene, camera);
@@ -1362,6 +1592,25 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
     const raycaster = new THREE.Raycaster();
     const pointerDownPos = new THREE.Vector2();
     const ndc = new THREE.Vector2();
+    const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const floorHit = new THREE.Vector3();
+
+    let draggingFurnitureId: string | null = null;
+    let draggingFurnitureGroup: THREE.Group | null = null;
+
+    const raycastFloorPoint = (clientX: number, clientY: number) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      ndc.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+      ndc.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(ndc, camera);
+      if (raycaster.ray.intersectPlane(floorPlane, floorHit)) {
+        return {
+          x: Math.max(-5.8, Math.min(3.1, Number(floorHit.x.toFixed(2)))),
+          z: Math.max(-0.8, Math.min(5.2, Number(floorHit.z.toFixed(2)))),
+        };
+      }
+      return { x: -1.8, z: 2.2 };
+    };
 
     const raycastDropZone = (
       clientX: number,
@@ -1397,9 +1646,14 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
         compassMesh.visible = propsRef.current.showVastuCompass;
         requestRender();
       },
+      rebuildPlacedFurniture: () => {
+        rebuildPlacedFurniture();
+        requestRender();
+      },
       triggerCameraPreset,
       requestRender,
       raycastDropZone,
+      raycastFloorPoint,
     };
 
     // Cancel automatic camera glide if user grabs controls
@@ -1414,8 +1668,51 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
 
     const onPointerDown = (e: PointerEvent) => {
       pointerDownPos.set(e.clientX, e.clientY);
+      if (placedGroups.length > 0) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        ndc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        ndc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        raycaster.setFromCamera(ndc, camera);
+        const fHits = raycaster.intersectObjects(placedGroups, true);
+        if (fHits.length > 0) {
+          let cur: THREE.Object3D | null = fHits[0].object;
+          while (cur) {
+            if (cur.userData?.instanceId) {
+              draggingFurnitureId = cur.userData.instanceId;
+              draggingFurnitureGroup =
+                placedGroups.find(
+                  (g) => g.userData.instanceId === draggingFurnitureId
+                ) ?? null;
+              controls.enabled = false;
+              propsRef.current.onSelectPlacedFurniture?.(draggingFurnitureId);
+              break;
+            }
+            cur = cur.parent;
+          }
+        }
+      }
     };
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (!draggingFurnitureGroup || !draggingFurnitureId) return;
+      const pt = raycastFloorPoint(e.clientX, e.clientY);
+      draggingFurnitureGroup.position.set(pt.x, 0, pt.z);
+      requestRender();
+    };
+
     const onPointerUp = (e: PointerEvent) => {
+      if (draggingFurnitureId && draggingFurnitureGroup) {
+        propsRef.current.onMovePlacedFurniture?.(
+          draggingFurnitureId,
+          Number(draggingFurnitureGroup.position.x.toFixed(2)),
+          Number(draggingFurnitureGroup.position.z.toFixed(2))
+        );
+        draggingFurnitureId = null;
+        draggingFurnitureGroup = null;
+        controls.enabled = true;
+        return;
+      }
+
       const dist = Math.hypot(
         e.clientX - pointerDownPos.x,
         e.clientY - pointerDownPos.y
@@ -1440,7 +1737,9 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
     };
 
     renderer.domElement.addEventListener("pointerdown", onPointerDown);
-    renderer.domElement.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerUp);
 
     // WebGL Context Loss Guard
     const onContextLost = (e: Event) => {
@@ -1479,7 +1778,9 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
       controls.removeEventListener("change", onControlChange);
       controls.dispose();
       renderer.domElement.removeEventListener("pointerdown", onPointerDown);
-      renderer.domElement.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerUp);
       renderer.domElement.removeEventListener("webglcontextlost", onContextLost);
       renderer.domElement.removeEventListener(
         "webglcontextrestored",
@@ -1523,6 +1824,11 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
     sceneApiRef.current?.requestRender();
   }, [doorsOpen, explodedView]);
 
+  // Rebuild placed furniture objects when list or selection changes
+  useEffect(() => {
+    sceneApiRef.current?.rebuildPlacedFurniture();
+  }, [placedFurniture, selectedFurnitureInstanceId]);
+
   useEffect(() => {
     if (!draggedSwatchLabel) {
       setHoverDropZone(null);
@@ -1543,10 +1849,15 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
     };
 
     const onSparkDrop = (e: Event) => {
-      if (!propsRef.current.draggedSwatchLabel) return;
       const { clientX, clientY } = (
         e as CustomEvent<{ clientX: number; clientY: number }>
       ).detail;
+      if (propsRef.current.draggedFurnitureName) {
+        const pt = sceneApiRef.current?.raycastFloorPoint(clientX, clientY);
+        if (pt) propsRef.current.onDropNewFurnitureAt?.(pt.x, pt.z);
+        return;
+      }
+      if (!propsRef.current.draggedSwatchLabel) return;
       const hit = sceneApiRef.current?.raycastDropZone(clientX, clientY);
       propsRef.current.onDropAtZone?.(hit ?? "lower");
       setHoverDropZone(null);
@@ -1561,14 +1872,21 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
   }, []);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    if (!draggedSwatchLabel) return;
+    if (!draggedSwatchLabel && !draggedFurnitureName) return;
     e.preventDefault();
-    const hit = sceneApiRef.current?.raycastDropZone(e.clientX, e.clientY);
-    setHoverDropZone(hit ?? "lower");
+    if (draggedSwatchLabel) {
+      const hit = sceneApiRef.current?.raycastDropZone(e.clientX, e.clientY);
+      setHoverDropZone(hit ?? "lower");
+    }
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    if (draggedFurnitureName) {
+      const pt = sceneApiRef.current?.raycastFloorPoint(e.clientX, e.clientY);
+      if (pt) onDropNewFurnitureAt?.(pt.x, pt.z);
+      return;
+    }
     if (!draggedSwatchLabel) return;
     const hit = sceneApiRef.current?.raycastDropZone(e.clientX, e.clientY);
     onDropAtZone?.(hit ?? "lower");
@@ -1585,29 +1903,22 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
       onDrop={handleDrop}
     >
       <div ref={mountRef} className="w-full h-full touch-none" />
-      {webglUnavailable && (
-        <div role="status" className="absolute inset-0 grid place-content-center px-6 text-center">
-          <div className="max-w-sm rounded-xl border border-black/10 bg-white/95 p-5">
-            <p className="font-semibold text-[#141517]">3D preview unavailable</p>
-            <p className="mt-2 text-sm text-[#54575a]">
-              This browser could not start WebGL. You can still browse plans and change design options.
-            </p>
-          </div>
-        </div>
-      )}
-      {draggedSwatchLabel && (
+      {(draggedSwatchLabel || draggedFurnitureName) && (
         <div className="pointer-events-none absolute inset-0 border-2 border-dashed border-[#B45309]/70 flex items-start justify-center pt-16 sm:pt-5">
           <div className="bg-[#141517] text-white text-xs font-medium px-3.5 py-2 rounded-lg shadow-md">
-            Drop &ldquo;{draggedSwatchLabel}&rdquo; onto{" "}
-            {hoverDropZone === "upper"
-              ? "Upper Cabinets"
-              : hoverDropZone === "island"
-              ? "Kitchen Island"
-              : hoverDropZone === "countertop"
-              ? "Countertop Stone"
-              : hoverDropZone === "backsplash"
-              ? "Backsplash Tile"
-              : "Lower Cabinets"}
+            {draggedFurnitureName
+              ? `Drop "${draggedFurnitureName}" anywhere on the 3D floor`
+              : `Drop "${draggedSwatchLabel}" onto ${
+                  hoverDropZone === "upper"
+                    ? "Upper Cabinets"
+                    : hoverDropZone === "island"
+                    ? "Kitchen Island"
+                    : hoverDropZone === "countertop"
+                    ? "Countertop Stone"
+                    : hoverDropZone === "backsplash"
+                    ? "Backsplash Tile"
+                    : "Lower Cabinets"
+                }`}
           </div>
         </div>
       )}
