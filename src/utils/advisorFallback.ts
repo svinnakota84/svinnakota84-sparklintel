@@ -1,4 +1,4 @@
-export interface OfflineAdvisorContext {
+export interface AdvisorContextPayload {
   planName?: string;
   planFacing?: string;
   planAreaSqFt?: number;
@@ -10,54 +10,60 @@ export interface OfflineAdvisorContext {
   countertop?: string;
   hardware?: string;
   castingSummary?: string;
+  subscriptionTier?: string;
   buyerProfile?: {
     plotFacing?: string;
     kitchenZone?: string;
     masterBedroomZone?: string;
     rashi?: string;
     nakshatra?: string;
+    propertyType?: string;
     cityOrClimate?: string;
   };
 }
 
 export function generateLocalAdvisorReply(
   question: string,
-  ctx: OfflineAdvisorContext
+  context: AdvisorContextPayload
 ): string {
   const q = question.toLowerCase();
-  const planName = ctx.planName ?? "Surya Courtyard Villa";
-  const facing = ctx.buyerProfile?.plotFacing ?? ctx.planFacing ?? "North";
-  const rashi = ctx.buyerProfile?.rashi ?? "Vrishabha (Taurus) — Earth";
-  const kitchenZone = ctx.buyerProfile?.kitchenZone ?? "South-East (Agneya)";
-  const palette = ctx.cabinetPalette ?? "Alabaster & Warm Oak";
+  const planName = context.planName ?? "Surya Courtyard Villa";
+  const facing = context.buyerProfile?.plotFacing ?? context.planFacing ?? "North";
+  const rashi = context.buyerProfile?.rashi ?? "Vrishabha (Taurus) — Earth";
+  const nakshatra = context.buyerProfile?.nakshatra ?? "Rohini";
+  const palette = context.cabinetPalette ?? "Alabaster & Warm Oak";
+  const casting = context.castingSummary ?? "Monolithic & GFRC Structural Casting";
 
-  if (
-    q.includes("cast") ||
-    q.includes("commercial") ||
-    q.includes("wall") ||
-    q.includes("gfrc") ||
-    q.includes("waffle")
-  ) {
-    return `Spark&Lintel Design-Builders Structural Casting Advisory:\n\n• Active Structure: ${
-      ctx.castingSummary ?? "Custom Structural Casting"
-    }\n• Capabilities: We execute Monolithic Cast-in-Situ RCC, Precast Boundary & Architectural Walls, GFRC Sculptural Arches/Shells, Waffle Coffered Slabs, Post-Tensioned Long-Span commercial plates, and L-Shaped Courtyard structures for both Residential and Commercial buildings.\n• Next Step: Use the 3D Casting tab to switch between Structure Forms (Walls, Pavilion, Courtyard, Waffle Hall, Multi-Story Tower), drag concrete/stone finishes directly onto the model, and click "Negotiate Casting Build" for a stamped local-engineering & site proposal.`;
+  if (q.includes("cast") || q.includes("wall") || q.includes("gfrc") || q.includes("waffle") || q.includes("commercial")) {
+    return [
+      `Spark&Lintel Design-Builders executes every type of architectural & structural casting (${casting}) for both commercial complexes and custom residences:`,
+      `• Multi-Story Buildings & Courtyards: Monolithic Mivan RCC, Precast Insulated Wall Panels, and L-shape courtyard wings with column-free Post-Tensioned (PT) spans up to 52 ft.`,
+      `• Boundary & Feature Walls: Segmented precast compound walls, fluted limestone-finish GFRC screens, and sculpted arched entry portals.`,
+      `• Curved Shells & Waffle Halls: Vaulted GFRC thin-shell pavilions, cantilevered sky-bridges, and exposed two-way waffle-coffered atriums.`,
+      `Note: All 3D builds are priced via custom 1-on-1 quote negotiation—use "Negotiate Casting Build" in the 3D Casting tab when ready.`,
+    ].join("\n\n");
   }
 
-  if (
-    q.includes("furniture") ||
-    q.includes("cabinet") ||
-    q.includes("color") ||
-    q.includes("kitchen") ||
-    q.includes("drag")
-  ) {
-    return `Spark&Lintel 3D Interiors & Furniture Advisory:\n\n• Active Kitchen Palette: "${palette}" (${
-      ctx.upperFinish ?? "Upper"
-    } / ${ctx.lowerFinish ?? "Lower"} with ${
-      ctx.countertop ?? "Quartz"
-    } countertop and ${ctx.hardware ?? "Brass"} hardware).\n• Furniture Placement: In Spark Interior Designs → Furniture, subscribed users can add sculptural bouclé sofas, travertine dining tables, fluted walnut credenzas, swivel chairs, and custom cabinetry—then drag and rotate each piece directly across the 3D floor.\n• Vastu Color Match: For ${facing}-facing homes and ${rashi}, warm alabaster, travertine, sage, and brushed brass keep Agneya (${kitchenZone}) balanced without dark clutter.`;
+  if (q.includes("vendor") || q.includes("george") || q.includes("sophia") || q.includes("damage") || q.includes("furniture") || q.includes("legal")) {
+    return [
+      `Subscribed Architect Pro & Turnkey Studio members can browse and place furniture curated alongside George Buildings, Sophia Key Designer Furniture, and Sophiakey Furniture Store:`,
+      `• Direct Vendor Fulfillment: Orders placed on third-party vendor websites are contracts strictly between you and that seller. Pricing, warranty, customs, and delivery are set by the seller.`,
+      `• Damage or Missing Item Claims: Retain photos and delivery receipts and file damage/return claims directly with the selling vendor and freight carrier. Spark&Lintel / Radiant Spark LLC provides visualization tools only and is legally shielded from supplier or transit claims.`,
+    ].join("\n\n");
   }
 
-  return `Spark&Lintel Architect & Vastu-Jyotish Summary (${planName}):\n\n• Plot & Entrance: ${facing} orientation works favorably when keeping the North-East (Ishanya) zone open for morning light and anchoring heavier structural walls/master suite in the South-West (Nairutya).\n• Kitchen & Rashi Harmony: With ${kitchenZone} and ${rashi}, your "${palette}" palette (${
-    ctx.upperFinish ?? "Light finish"
-  } + ${ctx.hardware ?? "Warm hardware"}) maintains strong elemental equilibrium.\n• Structural Check: Always verify M25/M30+ RCC column continuity, plinth beam damp-proofing, and local licensed PE/architect stamping before pouring concrete or finalizing purchase.\n\nHave a custom design ready? Click "Negotiate Quote" to review final construction or casting pricing 1-on-1.`;
+  if (q.includes("price") || q.includes("cost") || q.includes("quote") || q.includes("negotiat") || q.includes("subscrib")) {
+    return [
+      `How Spark&Lintel Pricing & Subscriptions Work:`,
+      `• Software Subscriptions ($29/mo Architect Pro or $79/mo Turnkey Studio) unlock all 12+ 3D cabinet palettes, custom wall color painting across Bedrooms/Toilets/Kitchens, all 4 structural construction plans, 3D furniture placement, and direct vendor storefronts.`,
+      `• Construction & Custom Fabrication: We never show generic fixed villa sticker prices. Customize your structure, wall finishes, and 3D casting choices, then click "Negotiate Quote" for a 1-on-1 engineering & construction proposal tailored to your city (${context.buyerProfile?.cityOrClimate ?? "your location"}).`,
+    ].join("\n\n");
+  }
+
+  return [
+    `Vastu, Jyotish & Architectural Guidance for ${planName} (${facing} Facing):`,
+    `• Vastu Alignment: Keeping the kitchen in the Agneya (South-East) sector with cooking facing East, Master Bedroom in Nairutya (South-West), and toilets positioned in West / North-West preserves positive Prana flow (${context.vastuScore ?? 95}% plan harmony).`,
+    `• Rashi & Material Harmony (${rashi}, Nakshatra: ${nakshatra}): Your active "${palette}" cabinet finish (${context.upperFinish ?? "Alabaster"} / ${context.lowerFinish ?? "Oak"}, ${context.countertop ?? "Quartz"}, ${context.hardware ?? "Brass"}) balances Earth and Agni elements cleanly.`,
+    `• Next Step: Test custom wall paint colors across every bedroom, toilet, and kitchen inside "Spark Construction", or request a 1-on-1 Negotiated Quote anytime.`,
+  ].join("\n\n");
 }

@@ -44,6 +44,21 @@ interface ConstructionPlansViewProps {
   onOpenNegotiation: () => void;
 }
 
+const DESIGNER_WALL_SWATCHES = [
+  { name: "Warm Alabaster", hex: "#F1ECE3" },
+  { name: "Bone White", hex: "#E7DFD2" },
+  { name: "Warm Linen", hex: "#DDD3C2" },
+  { name: "Sandstone Ochre", hex: "#C8A679" },
+  { name: "Sage Mist", hex: "#8FA38A" },
+  { name: "Olive Grove", hex: "#5C6848" },
+  { name: "Terracotta Clay", hex: "#B85D43" },
+  { name: "Blush Limewash", hex: "#D6B2A4" },
+  { name: "Peacock Teal", hex: "#2A6B6E" },
+  { name: "Deep Navy", hex: "#1F3347" },
+  { name: "Charcoal Slate", hex: "#383B40" },
+  { name: "Midnight Espresso", hex: "#2B211B" },
+];
+
 export const ConstructionPlansView: React.FC<ConstructionPlansViewProps> = ({
   selectedPlan,
   onSelectPlan,
@@ -336,48 +351,244 @@ export const ConstructionPlansView: React.FC<ConstructionPlansViewProps> = ({
         })}
       </div>
 
-      <section aria-labelledby="room-design" className="grid items-start gap-4 rounded-2xl border border-black/10 bg-white p-4 sm:grid-cols-2 sm:p-6">
-        <div className="space-y-3">
-          <h2 id="room-design" className="font-display text-xl font-semibold">Rooms and wall finishes</h2>
-          <p className="text-sm text-stone-700">Explore the rooms in {selectedPlan.name}, then preview a wall color for each room.</p>
-          <label className="flex flex-col gap-1 text-sm font-medium">Choose a room
-            <select className="min-h-11 rounded-lg border border-stone-300 bg-white px-3"
-              value={activeRoom?.id ?? ""} onChange={e=>setActiveRoom(selectedPlan.rooms.find(room=>room.id===e.target.value) ?? null)}>
-              {selectedPlan.rooms.map(room=><option key={room.id} value={room.id}>{room.name}</option>)}
+      <section aria-labelledby="room-design" className="grid items-start gap-5 rounded-2xl border border-black/10 bg-white p-4 sm:grid-cols-2 sm:p-6">
+        <div className="space-y-3.5">
+          <div>
+            <p className="text-[11px] font-mono text-[#B45309]">
+              Interactive Structural Room Schedule · Custom Paint Colors
+            </p>
+            <h2 id="room-design" className="font-display text-xl font-semibold text-[#141517]">
+              Bedrooms, Toilets, Kitchen &amp; Custom Wall Finishes
+            </h2>
+            <p className="text-sm text-[#57534E] mt-0.5">
+              Select any room in <strong className="text-[#141517]">{selectedPlan.name}</strong> to inspect dimensions &amp; Vastu zoning, then apply any custom paint color to its walls.
+            </p>
+          </div>
+
+          {/* Quick Clickable Room Chips (Bedrooms, Toilets, Kitchen, Living) */}
+          <div className="flex flex-wrap gap-1.5">
+            {selectedPlan.rooms.map((room) => {
+              const isCurr = activeRoom?.id === room.id;
+              const chipHex =
+                (isSubscribed && wallColors[selectedPlan.id + "/" + room.id]) ||
+                room.fill;
+              return (
+                <button
+                  key={room.id}
+                  type="button"
+                  onClick={() => setActiveRoom(room)}
+                  className={`min-h-[34px] px-2.5 py-1 rounded-lg border text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer ${
+                    isCurr
+                      ? "border-[#B45309] bg-[#FAF7F2] text-[#92400E] font-semibold"
+                      : "border-black/10 bg-[#FAF9F6] text-[#57534E] hover:border-black/25 hover:text-[#141517]"
+                  }`}
+                >
+                  <span
+                    className="w-3 h-3 rounded-full border border-black/20 shrink-0"
+                    style={{ backgroundColor: chipHex }}
+                  />
+                  <span>{room.name}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <label className="flex flex-col gap-1 text-xs font-medium text-[#57534E]">
+            Room Selector ({selectedPlan.rooms.length} zones in this plan)
+            <select
+              className="min-h-11 rounded-lg border border-black/15 bg-white px-3 text-sm text-[#141517]"
+              value={activeRoom?.id ?? ""}
+              onChange={(e) =>
+                setActiveRoom(
+                  selectedPlan.rooms.find((room) => room.id === e.target.value) ??
+                    null
+                )
+              }
+            >
+              {selectedPlan.rooms.map((room) => (
+                <option key={room.id} value={room.id}>
+                  {room.name} ({room.dimensionsFt})
+                </option>
+              ))}
             </select>
           </label>
-          {activeRoom && <p className="text-sm text-stone-700">{activeRoom.dimensionsFt} · {activeRoom.zone}</p>}
-          {isSubscribed ? <div className="flex flex-wrap items-center gap-3">
-            <label className="inline-flex min-h-11 items-center gap-2 text-sm font-medium">Wall color
-              <input aria-label="Wall color" type="color" className="h-10 w-14 cursor-pointer rounded border border-stone-300 bg-white p-1"
-                value={wallColor} onInput={e=>saveWallColor(e.currentTarget.value)} onChange={e=>saveWallColor(e.target.value)} />
-            </label>
-            <form className="inline-flex flex-wrap items-center gap-2" key={roomKey + wallColor}
-              onSubmit={event=>{
-                event.preventDefault();
-                const value = String(new FormData(event.currentTarget).get("hex")).trim();
-                if (/^#[0-9a-f]{6}$/i.test(value)) saveWallColor(value.toLowerCase());
-              }}>
-              <label className="inline-flex items-center gap-2 text-sm">Hex color
-                <input name="hex" required pattern="#[0-9a-fA-F]{6}" maxLength={7} defaultValue={wallColor.toUpperCase()}
-                  className="min-h-11 w-24 rounded-lg border border-stone-300 px-2 font-mono text-sm" />
-              </label>
-              <button type="submit" className="min-h-11 rounded-lg border border-stone-300 px-3 text-sm">Apply color</button>
-            </form>
-            <button type="button" className="min-h-11 rounded-lg border border-stone-300 px-3 text-sm" onClick={()=>saveWallColor()}>Reset wall color</button>
-          </div> : <button type="button" onClick={onOpenPricing} className="min-h-11 rounded-lg bg-[#141517] px-4 text-sm font-semibold text-white">Explore Pro and Studio plans</button>}
-          <a className="inline-flex min-h-11 items-center text-sm font-semibold text-amber-900 underline" href="#spark-structural-blueprint">View the full floor plan ↓</a>
-          {wallSaveFailed && <p role="status" className="text-sm text-stone-600">This browser could not save your wall color.</p>}
+
+          {activeRoom && (
+            <div className="rounded-xl bg-[#FAF9F6] border border-black/8 px-3.5 py-2.5 text-xs text-[#57534E]">
+              <p className="font-semibold text-[#141517]">
+                {activeRoom.name} · {activeRoom.dimensionsFt}
+              </p>
+              <p className="mt-0.5">
+                {activeRoom.zone} — {activeRoom.vastuNote}
+              </p>
+            </div>
+          )}
+
+          {isSubscribed ? (
+            <div className="space-y-3 pt-1">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <label className="inline-flex min-h-11 items-center gap-2 text-xs font-medium text-[#141517]">
+                  <span>Pick Any Wall Color</span>
+                  <input
+                    aria-label="Wall color"
+                    type="color"
+                    className="h-10 w-14 cursor-pointer rounded-lg border border-black/15 bg-white p-1"
+                    value={wallColor}
+                    onInput={(e) => saveWallColor(e.currentTarget.value)}
+                    onChange={(e) => saveWallColor(e.target.value)}
+                  />
+                </label>
+                <form
+                  className="inline-flex flex-wrap items-center gap-2"
+                  key={roomKey + wallColor}
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    const value = String(
+                      new FormData(event.currentTarget).get("hex")
+                    ).trim();
+                    if (/^#[0-9a-f]{6}$/i.test(value))
+                      saveWallColor(value.toLowerCase());
+                  }}
+                >
+                  <label className="inline-flex items-center gap-1.5 text-xs text-[#57534E]">
+                    <span>Hex</span>
+                    <input
+                      name="hex"
+                      required
+                      pattern="#[0-9a-fA-F]{6}"
+                      maxLength={7}
+                      defaultValue={wallColor.toUpperCase()}
+                      className="min-h-10 w-24 rounded-lg border border-black/15 px-2 font-mono text-xs text-[#141517]"
+                    />
+                  </label>
+                  <button
+                    type="submit"
+                    className="min-h-10 rounded-lg border border-black/15 bg-[#FAF9F6] px-3 text-xs font-medium text-[#141517] hover:border-[#B45309] cursor-pointer"
+                  >
+                    Apply Hex
+                  </button>
+                </form>
+                <button
+                  type="button"
+                  className="min-h-10 rounded-lg border border-black/15 px-3 text-xs text-[#57534E] hover:text-[#141517] cursor-pointer"
+                  onClick={() => saveWallColor()}
+                >
+                  Reset
+                </button>
+              </div>
+
+              {/* Designer Wall Color Swatches */}
+              <div>
+                <p className="text-[11px] font-medium text-[#78716C] mb-1.5">
+                  One-Tap Designer Wall Shades
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {DESIGNER_WALL_SWATCHES.map((sw) => {
+                    const active = wallColor.toLowerCase() === sw.hex.toLowerCase();
+                    return (
+                      <button
+                        key={sw.hex}
+                        type="button"
+                        onClick={() => saveWallColor(sw.hex.toLowerCase())}
+                        title={sw.name}
+                        aria-label={`Apply ${sw.name}`}
+                        className={`w-7 h-7 rounded-full border transition-transform cursor-pointer ${
+                          active
+                            ? "border-[#B45309] ring-2 ring-[#B45309]/40 scale-110"
+                            : "border-black/20 hover:scale-105"
+                        }`}
+                        style={{ backgroundColor: sw.hex }}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onChangeExteriorFinish("facade", {
+                    id: `custom-facade-${wallColor.replace("#", "")}`,
+                    name: `Custom Wall (${wallColor.toUpperCase()})`,
+                    zone: "facade",
+                    hex: wallColor,
+                    roughness: 0.72,
+                    metalness: 0.04,
+                    proOnly: true,
+                  });
+                  if (buildStage < 3) setBuildStage(5);
+                }}
+                className="min-h-[38px] px-3.5 py-1.5 rounded-lg bg-[#141517] text-white text-xs font-medium hover:bg-[#B45309] transition-colors cursor-pointer"
+              >
+                Apply {wallColor.toUpperCase()} to 3D House Exterior Walls Too
+              </button>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-[#B45309]/25 bg-[#FAF7F2] p-3.5 space-y-2">
+              <p className="text-xs text-[#57534E]">
+                Subscribe to unlock unlimited custom wall paint colors across every Bedroom, Toilet &amp; Kitchen—plus all 4 structural plans.
+              </p>
+              <button
+                type="button"
+                onClick={onOpenPricing}
+                className="min-h-10 rounded-lg bg-[#141517] px-4 text-xs font-semibold text-white hover:bg-[#B45309] transition-colors cursor-pointer"
+              >
+                Unlock All Plans &amp; Custom Wall Colors
+              </button>
+            </div>
+          )}
+
+          <a
+            className="inline-flex min-h-10 items-center text-xs font-semibold text-[#92400E] underline underline-offset-4"
+            href="#spark-structural-blueprint"
+          >
+            Jump to full CAD blueprint below ↓
+          </a>
+          {wallSaveFailed && (
+            <p role="status" className="text-xs text-[#78716C]">
+              This browser could not save your wall color locally.
+            </p>
+          )}
         </div>
-        <figure className="rounded-xl bg-[#f7f3ec] p-3">
-          <svg viewBox="0 0 300 175" role="img" aria-label={`${activeRoom?.name ?? "Room"} wall color preview`} className="mx-auto w-full max-w-md">
-            <path d="M35 110 150 68 265 110 150 155Z" fill="#ba9d7b" stroke="#897666"/>
-            <path d="M35 110V50L150 12V68Z" fill={wallColor} stroke="#897666"/>
-            <path d="M150 68V12L265 50V110Z" fill={wallColor} stroke="#897666"/>
-            <path d="M150 68V12L265 50V110Z" fill="#000" fillOpacity=".11"/>
-            <path d="M55 80V60L91 48V68Z" fill="#dbe6e9" stroke="#897666"/>
+        <figure className="rounded-xl bg-[#f7f3ec] border border-black/8 p-4">
+          <svg
+            viewBox="0 0 300 175"
+            role="img"
+            aria-label={`${activeRoom?.name ?? "Room"} wall color preview`}
+            className="mx-auto w-full max-w-md"
+          >
+            <path
+              d="M35 110 150 68 265 110 150 155Z"
+              fill="#ba9d7b"
+              stroke="#897666"
+            />
+            <path
+              d="M35 110V50L150 12V68Z"
+              fill={wallColor}
+              stroke="#897666"
+            />
+            <path
+              d="M150 68V12L265 50V110Z"
+              fill={wallColor}
+              stroke="#897666"
+            />
+            <path
+              d="M150 68V12L265 50V110Z"
+              fill="#000"
+              fillOpacity=".11"
+            />
+            <path
+              d="M55 80V60L91 48V68Z"
+              fill="#dbe6e9"
+              stroke="#897666"
+            />
           </svg>
-          <figcaption className="text-center text-xs text-stone-600">Wall color preview · confirm the finish with a physical paint sample.</figcaption>
+          <figcaption className="text-center text-xs text-[#57534E] mt-2">
+            {activeRoom?.name ?? "Selected Room"} · Wall Shade{" "}
+            <span className="font-mono font-semibold text-[#141517]">
+              {wallColor.toUpperCase()}
+            </span>
+          </figcaption>
         </figure>
       </section>
 

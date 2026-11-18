@@ -10,11 +10,62 @@ export type LegalSectionId =
   | "vendors";
 
 export function VendorTerms() {
-  return <div className="space-y-3 text-sm leading-relaxed">
-    <p><strong>Furniture purchases are made directly with the vendor.</strong> Spark&amp;Lintel, operated by Radiant Spark LLC, provides design tools and links to independent businesses. For purchases made directly with a vendor, the business identified on your order or invoice is your seller. That seller sets prices, availability, payment, delivery, warranty, return and refund terms.</p>
-    <p><strong>For damage, defects or missing items, contact your seller.</strong> Keep your order number, photos of the item and packaging, and proof of delivery. Follow the seller’s claim deadlines and contact the carrier if the seller directs you to. Ask the seller about freight, duties, return costs and warranty coverage before paying.</p>
-    <p>For direct vendor purchases, Radiant Spark LLC does not collect the order payment, ship the goods, issue vendor refunds, or provide the vendor’s warranty. To the extent permitted by applicable law, Radiant Spark LLC is not responsible for a vendor’s goods, delivery, or performance of its order. This notice leaves intact mandatory consumer rights and any obligations Radiant Spark LLC independently assumes under a separate signed agreement.</p>
-  </div>;
+  return (
+    <div className="space-y-3 text-sm leading-relaxed text-[#57534E]">
+      <p>
+        <strong className="text-[#141517]">
+          1. Direct Purchase Contracts Strictly With Third-Party Vendors:
+        </strong>{" "}
+        Spark&amp;Lintel Design-Builders, operated by{" "}
+        <strong className="text-[#141517]">Radiant Spark LLC</strong>, provides
+        interactive 3D visualization tools and informational links to external
+        furniture websites (including{" "}
+        <em>georgebuildings.com</em>, <em>sophiakeyfurniture.store</em>, and
+        brand social showcases). Any furniture, fixture, or material order you
+        place on or through a third-party vendor&apos;s store is a{" "}
+        <strong className="text-[#141517]">
+          direct contract strictly between you (Buyer) and that independent
+          Vendor (Seller)
+        </strong>
+        . That Seller alone controls pricing, quotes, checkout, customs duties,
+        freight, delivery lead times, installation, returns, refunds, and product
+        warranties.
+      </p>
+      <p>
+        <strong className="text-[#141517]">
+          2. Damaged, Defective, or Missing Shipments — Contact the Vendor Directly:
+        </strong>{" "}
+        If any furniture or material arrives damaged, defective, delayed, or
+        incomplete, you must contact the{" "}
+        <strong className="text-[#141517]">selling Vendor and freight carrier directly</strong>{" "}
+        using your vendor invoice/order number and delivery photos. Because
+        Radiant Spark LLC does not manufacture, inspect, warehouse, crate, ship,
+        insure, or collect purchase funds for third-party vendor orders,
+        Radiant Spark LLC cannot process vendor refunds, freight claims,
+        chargebacks, or warranty replacements.
+      </p>
+      <p>
+        <strong className="text-[#141517]">
+          3. Bilateral Hold-Harmless &amp; Covenant Not to Sue (Customers &amp; Suppliers):
+        </strong>{" "}
+        Radiant Spark LLC / Spark&amp;Lintel Design-Builders is an independent
+        software visualization platform—not a partner, agent, broker, reseller,
+        bailee, guarantor, or joint venturer of any customer or vendor. To the
+        maximum extent permitted by applicable law worldwide: (a){" "}
+        <strong className="text-[#141517]">Customers</strong> waive and release
+        all claims, demands, product-liability suits, freight-damage actions, or
+        legal proceedings against Radiant Spark LLC arising from third-party
+        vendor purchases, and agree to pursue remedies solely against the selling
+        Vendor; and (b){" "}
+        <strong className="text-[#141517]">Suppliers &amp; Vendors</strong>{" "}
+        likewise covenant not to sue, implead, join, or demand indemnification or
+        payment contribution from Radiant Spark LLC for customer disputes,
+        cancelled orders, transit losses, non-payment, or warranty claims.
+        Nothing herein waives non-excludable mandatory statutory rights or alters
+        obligations separately signed in writing by Radiant Spark LLC.
+      </p>
+    </div>
+  );
 }
 
 interface LegalShieldModalProps {
@@ -244,51 +295,63 @@ export const LegalShieldModal: React.FC<LegalShieldModalProps> = ({
           {section === "global" && (
             <>
               <h3 className="font-display text-lg font-semibold text-[#141517]">
-                Applicable Rights and Project Agreements
+                5. Global Multi-Jurisdiction Legal Shield (Customers &amp; Suppliers)
               </h3>
-              <p>Applicable consumer and construction laws govern each transaction. Direct vendor orders follow the seller’s terms and applicable law. Separate design-build or supply work follows the signed project agreement.</p>
+              <p>
+                Spark&amp;Lintel Design-Builders (Radiant Spark LLC) is structured
+                to protect both design-platform users and the operating company
+                across the United States, India, EU/UK, Middle East/GCC, and
+                Asia-Pacific under mandatory local laws and enforceable
+                contractual separations:
+              </p>
               <ul className="list-disc pl-5 space-y-2">
                 <li>
                   <strong className="text-[#141517]">
-                    Limited Liability Entity &amp; Insurance:
+                    Strict Legal Separation From Third-Party Suppliers:
                   </strong>{" "}
-                  Operate through an LLC/Corporation with{" "}
-                  <em>Errors &amp; Omissions (E&amp;O)</em> / Professional
-                  Indemnity and General Liability coverage extending to target
-                  export regions.
+                  Independent furniture/material websites linked inside the app
+                  (George Buildings, Sophia Key Furniture Store, Instagram
+                  galleries) operate their own stores and contracts. Neither
+                  customers nor suppliers/vendors may hold Radiant Spark LLC
+                  liable for third-party goods, transit damage, customs holds,
+                  or vendor non-performance.
                 </li>
                 <li>
                   <strong className="text-[#141517]">
-                    Local Licensed Partner Sign-Off:
+                    Limited Liability Entity &amp; Liability Cap:
                   </strong>{" "}
-                  Always require a licensed engineer/architect in the
-                  project&apos;s country/state to stamp construction &amp;
-                  casting drawings before site work begins.
+                  Radiant Spark LLC provides software visualization and concept
+                  tools &ldquo;as is.&rdquo; Total aggregate liability for any
+                  platform subscription claim is capped at the subscription fees
+                  actually paid by the user to Radiant Spark LLC during the
+                  preceding 3 months, except where prohibited by mandatory law.
                 </li>
                 <li>
                   <strong className="text-[#141517]">
-                    Governing Law &amp; Arbitration Clause:
+                    Local Licensed Engineer / Architect Sign-Off:
                   </strong>{" "}
-                  State a clear governing jurisdiction and international
-                  arbitration forum (e.g., ICC / SIAC / AAA) inside your signed
-                  client contracts, subject to local mandatory consumer laws.
+                  Every structural, concrete-casting, and construction concept
+                  requires final calculations, soil testing, and local municipal
+                  stamping by a licensed PE/Architect prior to pouring or build.
                 </li>
                 <li>
                   <strong className="text-[#141517]">
-                    International Trade &amp; Incoterms:
+                    Governing Law, Arbitration &amp; Incoterms:
                   </strong>{" "}
-                  When sourcing cabinetry, glazing, or designer furniture across
-                  borders, define Incoterms (FOB, CIF, DDP), customs duties,
-                  wood-fumigation rules, and local electrical/UL/CE/BIS
-                  certifications clearly in writing.
+                  Executed custom design-build contracts specify binding
+                  arbitration (AAA / ICC / SIAC), clear currency, Incoterms
+                  (FOB, CIF, DDP), and exclusion of consequential or indirect
+                  damages, subject only to non-waivable statutory consumer
+                  protections.
                 </li>
               </ul>
               <p className="text-xs text-[#78716C] pt-2 border-t border-black/8 flex items-center gap-1.5">
                 <Scale className="w-3.5 h-3.5 text-[#B45309] shrink-0" />
                 <span>
-                  Note: This compliance framework is educational guidance—have a
-                  qualified corporate/construction attorney review your final
-                  client contracts for your home jurisdiction.
+                  Cross-border commercial protection framework — confirm
+                  jurisdiction-specific construction and supplier indemnities
+                  with licensed legal counsel before signing turnkey build
+                  contracts.
                 </span>
               </p>
             </>

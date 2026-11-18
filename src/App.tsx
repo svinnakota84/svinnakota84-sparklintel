@@ -460,14 +460,6 @@ export default function App() {
 
       {/* Main Content Stage */}
       <main className="flex-1">
-        {(activeTab === "studio" || activeTab === "casting") && (
-          <LayoutEditor
-            key={activeTab}
-            mode={activeTab === "studio" ? "interior" : "casting"}
-            preview={isSubscribed}
-            onPlans={() => setActiveTab("pricing")}
-          />
-        )}
         {activeTab === "studio" && (
           <StudioWorkspace
             selectedPlan={selectedPlan}
@@ -500,6 +492,7 @@ export default function App() {
             onOpenSubscription={() => setActiveTab("pricing")}
             onAskVastuAI={() => setActiveTab("advisor")}
             onOpenNegotiation={() => setNegotiationOpen(true)}
+            onOpenVendorLegal={() => openLegal("vendors")}
           />
         )}
 
@@ -568,6 +561,17 @@ export default function App() {
             onSelectTier={(tier) => setSubscriptionTier(tier)}
             onReturnToStudio={() => setActiveTab("studio")}
           />
+        )}
+
+        {(activeTab === "studio" || activeTab === "casting") && (
+          <div className="pb-10">
+            <LayoutEditor
+              key={activeTab}
+              mode={activeTab === "studio" ? "interior" : "casting"}
+              preview={isSubscribed}
+              onPlans={() => setActiveTab("pricing")}
+            />
+          </div>
         )}
       </main>
 

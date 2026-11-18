@@ -4,7 +4,8 @@ import App from './App.tsx';
 import './index.css';
 
 interface ErrorBoundaryState {
-  error: Error | null;
+  hasError: boolean;
+  message: string;
 }
 
 class AppErrorBoundary extends React.Component<
@@ -13,33 +14,36 @@ class AppErrorBoundary extends React.Component<
 > {
   constructor(props: {children: React.ReactNode}) {
     super(props);
-    this.state = {error: null};
+    this.state = {hasError: false, message: ''};
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return {error};
+    return {
+      hasError: true,
+      message: error?.message || 'Unexpected application error',
+    };
   }
 
   render() {
-    if (this.state.error) {
+    if (this.state.hasError) {
       return (
-        <div className="min-h-dvh flex items-center justify-center bg-[#F8F7F4] text-[#141517] p-6">
-          <div className="max-w-md w-full bg-white border border-black/10 rounded-2xl p-6 space-y-3">
+        <div className="min-h-dvh bg-[#F8F7F4] text-[#141517] flex items-center justify-center p-6">
+          <div className="max-w-md w-full bg-white rounded-2xl border border-black/10 p-6 shadow-sm space-y-3">
             <p className="text-xs font-mono text-[#B45309]">
               Spark&amp;Lintel Design-Builders
             </p>
             <h1 className="font-display text-xl font-semibold">
-              Studio Display Recovery
+              Display Reset Required
             </h1>
             <p className="text-sm text-[#57534E]">
-              {this.state.error.message ||
-                'A display error occurred while loading the 3D studio.'}
+              {this.state.message}
             </p>
             <button
+              type="button"
               onClick={() => window.location.reload()}
-              className="min-h-[42px] px-4 py-2 rounded-xl bg-[#141517] text-white text-xs font-semibold cursor-pointer"
+              className="min-h-[44px] px-4 py-2 rounded-xl bg-[#141517] text-white text-xs font-semibold cursor-pointer"
             >
-              Reload Application
+              Reload Studio
             </button>
           </div>
         </div>

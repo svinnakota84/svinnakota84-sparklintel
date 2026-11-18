@@ -122,6 +122,7 @@ export function LayoutEditor({mode, preview, onPlans}: {mode: Mode; preview: boo
   const [kind,setKind]=useState(Object.keys(catalog)[0]);
   const [selected,setSelected]=useState("");
   const [storageFailed,setStorageFailed]=useState(false);
+  const [confirmClear,setConfirmClear]=useState(false);
   const [template,setTemplate]=useState("wall");
   const [source,setSource]=useState("");
   const [sourceError,setSourceError]=useState(false);
@@ -199,7 +200,14 @@ export function LayoutEditor({mode, preview, onPlans}: {mode: Mode; preview: boo
           {casting && <><label className="flex items-center gap-2 text-sm">Starting layout<select className={button} value={template} onChange={e=>setTemplate(e.target.value)}>
             <option value="wall">Walls and openings</option><option value="frame">Column and beam frame</option><option value="shell">Slabs and stairs</option><option value="blank">Blank layout</option>
           </select></label><button className={button} type="button" onClick={()=>{if(pieces.length+templates(template).length<=80)setPieces(previous=>[...previous,...templates(template)]);}} disabled={template==="blank"}>Add template</button>
-          <button className={button} type="button" onClick={()=>{if(window.confirm("Clear the placed elements and pencil marks?")){setPieces([]);setLines([]);setSelected("");}}}>Clear layout</button></>}
+          {!confirmClear ? (
+            <button className={button} type="button" onClick={()=>setConfirmClear(true)}>Clear layout</button>
+          ) : (
+            <span className="inline-flex items-center gap-1.5">
+              <button className="min-h-11 rounded-lg border border-red-300 bg-red-50 px-3 text-sm font-semibold text-red-800 cursor-pointer" type="button" onClick={()=>{setPieces([]);setLines([]);setSelected("");setConfirmClear(false);}}>Confirm clear</button>
+              <button className={button} type="button" onClick={()=>setConfirmClear(false)}>Cancel</button>
+            </span>
+          )}</>}
           <label className="flex items-center gap-2 text-sm">{casting?"Element":"Furniture"}<select className={button} value={kind} onChange={e=>setKind(e.target.value)}>{Object.entries(catalog).map(([id,p])=><option value={id} key={id}>{p.label}</option>)}</select></label>
           <button className={button} type="button" disabled={pieces.length>=80} onClick={()=>{
             const link=casting?"":supplierLink(source.trim());

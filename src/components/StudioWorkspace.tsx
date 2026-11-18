@@ -14,6 +14,7 @@ import {
   Palette,
   Plus,
   RotateCw,
+  ShieldCheck,
   SlidersHorizontal,
   Sofa,
   Sparkles,
@@ -84,6 +85,7 @@ interface StudioWorkspaceProps {
   onOpenSubscription: () => void;
   onAskVastuAI: () => void;
   onOpenNegotiation: () => void;
+  onOpenVendorLegal: () => void;
 }
 
 export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
@@ -117,6 +119,7 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
   onOpenSubscription,
   onAskVastuAI,
   onOpenNegotiation,
+  onOpenVendorLegal,
 }) => {
   const [dockExpanded, setDockExpanded] = useState(true);
   const [dockTab, setDockTab] = useState<DockTab>("combos");
@@ -1250,6 +1253,142 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Direct Vendor Storefronts + Bilateral Legal Shield */}
+        <section
+          aria-labelledby="vendor-storefronts-heading"
+          className="bg-white rounded-2xl border border-black/10 p-5 sm:p-6 space-y-5"
+        >
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-black/8">
+            <div>
+              <p className="text-xs font-mono text-[#B45309]">
+                Subscribed Partner Storefronts · Direct Vendor Ordering
+              </p>
+              <h2
+                id="vendor-storefronts-heading"
+                className="font-display text-xl sm:text-2xl font-semibold text-[#141517] mt-0.5"
+              >
+                Shop Furniture Directly From George Buildings &amp; Sophia Key
+              </h2>
+              <p className="text-xs sm:text-sm text-[#57534E] mt-1 max-w-2xl">
+                Preview and drag pieces into your 3D room above, then visit the
+                partner vendor&apos;s own storefront below to place or request
+                physical furniture orders directly with the seller.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onOpenVendorLegal}
+              className="min-h-[40px] px-3.5 py-2 rounded-xl border border-black/15 bg-[#FAF9F6] text-xs font-semibold text-[#141517] hover:border-[#B45309] inline-flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
+            >
+              <ShieldCheck className="w-4 h-4 text-[#B45309]" />
+              <span>Vendor Legal Shield &amp; Damage Policy</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              {
+                title: "George Buildings",
+                tag: "CUSTOM CABINETRY & FURNITURE",
+                desc: "Order whole-house cabinetry, architectural doors, dining sets, and sculptural furniture directly via George Buildings.",
+                url: "https://georgebuildings.com/george-furniture/",
+                cta: "Shop George Buildings ↗",
+              },
+              {
+                title: "Sophia Key Furniture Store",
+                tag: "BOUCLÉ, TRAVERTINE & BESPOKE",
+                desc: "Browse designer sofas, curved seating, stone tables, or send a direct bespoke furniture sourcing order to Sophia Key.",
+                url: "https://sophiakeyfurniture.store/",
+                secondaryUrl: "https://sophiakeyfurniture.store/pages/contact",
+                secondaryCta: "Contact Sophia Key ↗",
+                cta: "Shop Sophia Key Store ↗",
+              },
+              {
+                title: "Sophia Key Designer Instagram",
+                tag: "CURATED SHOWROOM FEED",
+                desc: "Explore live showroom installations and new sculptural finishes before placing direct orders through the Sophia Key store.",
+                url: "https://www.instagram.com/sophiakey_designerfurniture/",
+                cta: "Open Sophia Key Instagram ↗",
+              },
+            ].map((vendor) => (
+              <div
+                key={vendor.title}
+                className="rounded-xl border border-black/10 bg-[#FAF9F6] p-4 flex flex-col justify-between gap-4"
+              >
+                <div>
+                  <p className="text-[10px] font-mono text-[#92400E] tracking-wide">
+                    {vendor.tag}
+                  </p>
+                  <h3 className="text-base font-semibold text-[#141517] mt-1">
+                    {vendor.title}
+                  </h3>
+                  <p className="text-xs text-[#57534E] mt-1.5 leading-relaxed">
+                    {vendor.desc}
+                  </p>
+                </div>
+
+                {isSubscribed ? (
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-black/8">
+                    <a
+                      href={vendor.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="min-h-[38px] px-3.5 py-2 rounded-lg bg-[#141517] text-white text-xs font-semibold hover:bg-[#B45309] transition-colors inline-flex items-center"
+                    >
+                      {vendor.cta}
+                    </a>
+                    {vendor.secondaryUrl && (
+                      <a
+                        href={vendor.secondaryUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="min-h-[38px] px-3 py-2 rounded-lg border border-black/15 bg-white text-xs font-semibold text-[#141517] hover:border-[#B45309] inline-flex items-center"
+                      >
+                        {vendor.secondaryCta}
+                      </a>
+                    )}
+                  </div>
+                ) : (
+                  <div className="pt-2 border-t border-black/8">
+                    <button
+                      type="button"
+                      onClick={onOpenSubscription}
+                      className="min-h-[38px] px-3.5 py-2 rounded-lg bg-[#EFECE6] text-[#92400E] text-xs font-semibold hover:bg-[#E6E0D4] inline-flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Lock className="w-3.5 h-3.5" />
+                      <span>Subscribe to Unlock Vendor Store</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="rounded-xl bg-[#FAF7F2] border border-[#B45309]/25 p-3.5 flex items-start gap-3 text-xs text-[#57534E] leading-relaxed">
+            <ShieldCheck className="w-4 h-4 text-[#B45309] shrink-0 mt-0.5" />
+            <div>
+              <strong className="text-[#141517]">
+                Legal Shield — Direct Vendor Orders &amp; Zero-Liability Notice:
+              </strong>{" "}
+              All third-party furniture orders are billed, shipped, and warranted
+              strictly between you and the selling vendor (George Buildings or
+              Sophia Key). If any shipment arrives damaged, defective, or
+              incomplete, contact the selling vendor and carrier directly.
+              Spark&amp;Lintel Design-Builders / Radiant Spark LLC is an
+              independent 3D visualization platform protected against claims or
+              lawsuits from both buyers and suppliers.{" "}
+              <button
+                type="button"
+                onClick={onOpenVendorLegal}
+                className="font-semibold text-[#92400E] underline underline-offset-2 cursor-pointer"
+              >
+                Read full Vendor Legal Shield
+              </button>
+              .
+            </div>
+          </div>
+        </section>
       </div>
 
       {/* Floating Touch-Drag Swatch or Furniture Badge (Mobile/Tablet) */}
