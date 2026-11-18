@@ -79,6 +79,8 @@ export const HouseBuilder3DViewer: React.FC<HouseBuilder3DViewerProps> = ({
     raycastZone: (clientX: number, clientY: number) => ExteriorDropZone | null;
   } | null>(null);
 
+  const [webglUnavailable, setWebglUnavailable] = useState(false);
+
   useEffect(() => {
     const container = mountRef.current;
     if (!container) return;
@@ -94,10 +96,16 @@ export const HouseBuilder3DViewer: React.FC<HouseBuilder3DViewerProps> = ({
     const camera = new THREE.PerspectiveCamera(40, w / h, 0.2, 120);
     camera.position.set(13.5, 8.8, 14.5);
 
-    const renderer = new THREE.WebGLRenderer({
-      antialias: !isSoftwareGl,
-      powerPreference: "high-performance",
-    });
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        antialias: !isSoftwareGl,
+        powerPreference: "high-performance",
+      });
+    } catch {
+      setWebglUnavailable(true);
+      return;
+    }
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
@@ -750,6 +758,16 @@ export const HouseBuilder3DViewer: React.FC<HouseBuilder3DViewerProps> = ({
       onDrop={handleDrop}
     >
       <div ref={mountRef} className="w-full h-full touch-none" />
+      {webglUnavailable && (
+        <div role="status" className="absolute inset-0 grid place-content-center px-6 text-center">
+          <div className="max-w-sm rounded-xl border border-black/10 bg-white/95 p-5">
+            <p className="font-semibold text-[#141517]">3D preview unavailable</p>
+            <p className="mt-2 text-sm text-[#54575a]">
+              This browser could not start WebGL. You can still browse plans and change design options.
+            </p>
+          </div>
+        </div>
+      )}
 
       {draggedFinish && (
         <div className="pointer-events-none absolute inset-0 border-2 border-dashed border-[#B45309]/70 flex items-end justify-center p-4">
