@@ -350,9 +350,20 @@ export const ConstructionPlansView: React.FC<ConstructionPlansViewProps> = ({
           {isSubscribed ? <div className="flex flex-wrap items-center gap-3">
             <label className="inline-flex min-h-11 items-center gap-2 text-sm font-medium">Wall color
               <input aria-label="Wall color" type="color" className="h-10 w-14 cursor-pointer rounded border border-stone-300 bg-white p-1"
-                value={wallColor} onChange={e=>saveWallColor(e.target.value)} />
+                value={wallColor} onInput={e=>saveWallColor(e.currentTarget.value)} onChange={e=>saveWallColor(e.target.value)} />
             </label>
-            <span className="font-mono text-xs text-stone-600">{wallColor.toUpperCase()}</span>
+            <form className="inline-flex flex-wrap items-center gap-2" key={roomKey + wallColor}
+              onSubmit={event=>{
+                event.preventDefault();
+                const value = String(new FormData(event.currentTarget).get("hex")).trim();
+                if (/^#[0-9a-f]{6}$/i.test(value)) saveWallColor(value.toLowerCase());
+              }}>
+              <label className="inline-flex items-center gap-2 text-sm">Hex color
+                <input name="hex" required pattern="#[0-9a-fA-F]{6}" maxLength={7} defaultValue={wallColor.toUpperCase()}
+                  className="min-h-11 w-24 rounded-lg border border-stone-300 px-2 font-mono text-sm" />
+              </label>
+              <button type="submit" className="min-h-11 rounded-lg border border-stone-300 px-3 text-sm">Apply color</button>
+            </form>
             <button type="button" className="min-h-11 rounded-lg border border-stone-300 px-3 text-sm" onClick={()=>saveWallColor()}>Reset wall color</button>
           </div> : <button type="button" onClick={onOpenPricing} className="min-h-11 rounded-lg bg-[#141517] px-4 text-sm font-semibold text-white">Explore Pro and Studio plans</button>}
           <a className="inline-flex min-h-11 items-center text-sm font-semibold text-amber-900 underline" href="#spark-structural-blueprint">View the full floor plan ↓</a>
