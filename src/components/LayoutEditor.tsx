@@ -1,5 +1,6 @@
 import {useEffect, useRef, useState} from "react";
 import type {PointerEvent} from "react";
+import {VendorTerms} from "./LegalShieldModal";
 
 type Point = {x: number; y: number};
 type Piece = Point & {id: string; kind: string; w: number; d: number; h: number; color: string; source?: string; elevation?: number};
@@ -25,9 +26,9 @@ const structure: Record<string, Item> = {
   stair: {label: "Stair flight", dims: [1.2, 2.5, 1.5], color: "#9c9280"},
 };
 const collections = [
-  {label: "George Furniture", url: "https://georgebuildings.com/george-furniture/"},
-  {label: "Sophiakey Furniture", url: "https://sophiakeyfurniture.store/"},
-  {label: "Sophiakey on Instagram", url: "https://www.instagram.com/sophiakey_designerfurniture/"},
+  {label: "George Buildings", note: "Browse furniture and contact George for a quote.", url: "https://georgebuildings.com/george-furniture/", action: "Browse George furniture"},
+  {label: "Sophiakey Furniture", note: "Browse the sourcing service or send a project inquiry.", url: "https://sophiakeyfurniture.store/", action: "Visit Sophiakey store", inquiry: "https://sophiakeyfurniture.store/pages/contact"},
+  {label: "Sophiakey on Instagram", note: "Browse showroom inspiration. Use Sophiakey’s site to confirm ordering terms.", url: "https://www.instagram.com/sophiakey_designerfurniture/", action: "View Instagram"},
 ];
 function supplierLink(value: string) {
   try {
@@ -176,12 +177,22 @@ export function LayoutEditor({mode, preview, onPlans}: {mode: Mode; preview: boo
   return <details className="mx-auto mt-5 w-[calc(100%-2rem)] max-w-7xl rounded-2xl border border-stone-200 bg-[#fbf9f4]">
     <summary className="cursor-pointer px-5 py-4 font-semibold">{casting?"Draw and build a custom casting layout":"Arrange furniture and sketch a room"}</summary>
     <div className="space-y-4 border-t border-stone-200 p-4 sm:p-5">
-      {!casting && <div>
-        <p className="text-sm text-stone-700">Browse supplier collections. Use adjustable 3D placeholders to check fit, then confirm product dimensions and finishes with the supplier.</p>
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2">{collections.map(link=><a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer" className="min-h-11 py-2 text-sm font-medium text-amber-900 underline">{link.label} ↗</a>)}</div>
-      </div>}
+      {!casting && preview && <section aria-labelledby="shop-vendors" className="space-y-3">
+        <h2 id="shop-vendors" className="text-lg font-semibold">Shop furniture directly from suppliers</h2>
+        <p className="text-sm text-stone-700">Order and pay on the vendor’s site or through its sales team. For delivery damage, missing items, returns or warranty claims, contact the seller on your order.</p>
+        <details className="rounded-xl border border-stone-200 bg-white px-4 py-3">
+          <summary className="cursor-pointer font-medium text-stone-900">Legal Shield · Vendor orders and damage claims</summary>
+          <div className="pt-3"><VendorTerms /></div>
+        </details>
+        <div className="grid gap-3 sm:grid-cols-3">{collections.map(vendor=><article key={vendor.url} className="flex flex-col gap-2 rounded-xl border border-stone-200 bg-white p-4">
+          <h3 className="font-semibold">{vendor.label}</h3><p className="text-sm text-stone-700">{vendor.note}</p>
+          <a href={vendor.url} target="_blank" rel="noopener noreferrer" className="mt-auto inline-flex min-h-11 items-center self-start text-sm font-semibold text-amber-900 underline">{vendor.action} ↗</a>
+          {vendor.inquiry && <a href={vendor.inquiry} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center self-start text-sm font-semibold text-amber-900 underline">Contact Sophiakey for sourcing ↗</a>}
+        </article>)}</div>
+        <p className="text-sm text-stone-700">Add a furniture shape below, enter its dimensions, and attach its vendor link to keep the reference with your layout.</p>
+      </section>}
       {(!casting && !preview) ? <div>
-        <p className="mb-2 text-sm text-stone-700">Furniture placement is available in the Pro and Studio plan previews.</p>
+        <p className="mb-2 text-sm text-stone-700">Supplier browsing and furniture placement are available in the Pro and Studio plan previews.</p>
         <button type="button" className={button} onClick={onPlans}>View plan options</button>
       </div> : <>
         <div className="flex flex-wrap gap-2">
@@ -245,7 +256,7 @@ export function LayoutEditor({mode, preview, onPlans}: {mode: Mode; preview: boo
             <option value={catalog[item.kind].color}>Original</option>{finish.filter(c=>c!==catalog[item.kind].color).map((c,i)=><option key={c} value={c}>{["Concrete gray","Sand","Slate","Clay"][finish.indexOf(c)] ?? i}</option>)}
           </select></label>
         </div>}
-        {item?.source && supplierLink(item.source) && <a href={supplierLink(item.source)} target="_blank" rel="noopener noreferrer" className="inline-block py-2 text-sm font-medium text-amber-900 underline">Open selected item’s supplier reference ↗</a>}
+        {item?.source && supplierLink(item.source) && <a href={supplierLink(item.source)} target="_blank" rel="noopener noreferrer" className="inline-block py-2 text-sm font-medium text-amber-900 underline">View this item at the vendor ↗</a>}
         <p className="text-xs text-stone-600">{casting?"Concept geometry for layout discussion. A qualified local engineer must validate structural designs. ":"Supplier models use approximate shapes. "}{storageFailed?"This browser could not save the layout.":preview?"This layout saves in this browser.":"Select a plan preview to keep your layout in this browser."}</p>
       </>}
     </div>
