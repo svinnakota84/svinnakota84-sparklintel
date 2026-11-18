@@ -64,6 +64,10 @@ const STORAGE_BRIEF_KEY = "sparklintel_saved_brief_v1";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<AppTab>("studio");
+  const [studioDockRequest, setStudioDockRequest] = useState<{
+    tab: "combos" | "custom" | "furniture" | "camera";
+    nonce: number;
+  } | null>(null);
   const [negotiationOpen, setNegotiationOpen] = useState(false);
   const [legalOpen, setLegalOpen] = useState(false);
   const [legalSection, setLegalSection] =
@@ -242,6 +246,8 @@ export default function App() {
         specId: spec.id,
         name: spec.name,
         collection: spec.collection,
+        vendorUrl: spec.vendorUrl,
+        vendorLabel: spec.vendorLabel,
         shape: spec.shape,
         primaryHex: spec.primaryHex,
         accentHex: spec.accentHex,
@@ -349,6 +355,8 @@ export default function App() {
       specId: spec.id,
       name: spec.name,
       collection: spec.collection,
+      vendorUrl: spec.vendorUrl,
+      vendorLabel: spec.vendorLabel,
       shape: spec.shape,
       primaryHex: spec.primaryHex,
       accentHex: spec.accentHex,
@@ -530,6 +538,7 @@ export default function App() {
             onAskVastuAI={() => setActiveTab("advisor")}
             onOpenNegotiation={() => setNegotiationOpen(true)}
             onOpenVendorLegal={() => openLegal("vendors")}
+            requestedDockTab={studioDockRequest}
           />
         )}
 
@@ -596,7 +605,10 @@ export default function App() {
           <SubscriptionView
             currentTier={subscriptionTier}
             onSelectTier={(tier) => setSubscriptionTier(tier)}
-            onReturnToStudio={() => setActiveTab("studio")}
+            onReturnToStudio={() => {
+              setStudioDockRequest({ tab: "furniture", nonce: Date.now() });
+              setActiveTab("studio");
+            }}
           />
         )}
 

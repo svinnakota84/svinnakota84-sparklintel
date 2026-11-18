@@ -321,6 +321,71 @@ export const CastingStudioView: React.FC<CastingStudioViewProps> = ({
             </button>
           </div>
 
+          {/* Instant Build & Cast Style Bar attached to 3D Canvas */}
+          <div className="px-3 py-2 border-b border-black/8 bg-white flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+              <span className="text-[10px] font-mono text-[#78716C] shrink-0">
+                BUILD:
+              </span>
+              {CAST_STRUCTURE_FORMS.map((form) => {
+                const active = structureForm === form.id;
+                const shortLabel =
+                  form.id === "perimeter-walls"
+                    ? "Walls & Gates"
+                    : form.id === "building-frame"
+                    ? "Multi-Story Building"
+                    : form.id === "curved-pavilion"
+                    ? "Curved Shell"
+                    : form.id === "courtyard-l-wing"
+                    ? "L-Courtyard"
+                    : form.id === "waffle-atrium"
+                    ? "Waffle Hall"
+                    : "Sky-Bridge";
+                return (
+                  <button
+                    key={form.id}
+                    type="button"
+                    onClick={() => onChangeStructureForm(form.id)}
+                    className={`min-h-[30px] px-2.5 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap shrink-0 border transition-colors cursor-pointer ${
+                      active
+                        ? "bg-[#141517] text-white border-[#141517]"
+                        : "bg-[#FAF9F6] text-[#57534E] border-black/10 hover:text-[#141517]"
+                    }`}
+                  >
+                    {shortLabel}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+              <span className="text-[10px] font-mono text-[#78716C] shrink-0">
+                STYLE:
+              </span>
+              {(
+                [
+                  { id: "cantilever", label: "Cantilever" },
+                  { id: "arched-gfrc", label: "GFRC Arch" },
+                  { id: "brise-soleil", label: "Solar Fins" },
+                  { id: "folded-shell", label: "Folded Shell" },
+                ] as { id: CastingFacadeProfile; label: string }[]
+              ).map((fp) => (
+                <button
+                  key={fp.id}
+                  type="button"
+                  onClick={() => onChangeFacadeProfile(fp.id)}
+                  className={`min-h-[28px] px-2 py-1 rounded-md text-[11px] font-medium whitespace-nowrap shrink-0 border transition-colors cursor-pointer ${
+                    facadeProfile === fp.id
+                      ? "bg-[#B45309] text-white border-[#B45309]"
+                      : "bg-[#FAF9F6] text-[#57534E] border-black/10"
+                  }`}
+                >
+                  {fp.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="relative h-[340px] sm:h-[490px] w-full">
             <Casting3DViewer
               structureForm={structureForm}

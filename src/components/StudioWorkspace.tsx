@@ -4,8 +4,10 @@ import {
   ChevronDown,
   ChevronUp,
   Compass,
+  Crosshair,
   Crown,
   DoorOpen,
+  ExternalLink,
   GripVertical,
   Handshake,
   Layers,
@@ -86,6 +88,7 @@ interface StudioWorkspaceProps {
   onAskVastuAI: () => void;
   onOpenNegotiation: () => void;
   onOpenVendorLegal: () => void;
+  requestedDockTab?: { tab: DockTab; nonce: number } | null;
 }
 
 export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
@@ -120,6 +123,7 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
   onAskVastuAI,
   onOpenNegotiation,
   onOpenVendorLegal,
+  requestedDockTab,
 }) => {
   const [dockExpanded, setDockExpanded] = useState(true);
   const [dockTab, setDockTab] = useState<DockTab>("combos");
@@ -129,6 +133,9 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
   const [explodedView, setExplodedView] = useState(0);
   const [showVastuCompass, setShowVastuCompass] = useState(false);
   const [lockNotice, setLockNotice] = useState<string | null>(null);
+  const [furnitureFilter, setFurnitureFilter] = useState<string>("all");
+  const [placingFurniture, setPlacingFurniture] =
+    useState<PlaceableFurnitureSpec | null>(null);
   const [draggedSpec, setDraggedSpec] = useState<{
     spec: CabinetMaterialSpec;
     naturalSlot: InteriorDropZone;
@@ -145,6 +152,13 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
   } | null>(null);
   const touchDraggingFurnitureRef = useRef<PlaceableFurnitureSpec | null>(null);
   const ignoreNextClickRef = useRef(false);
+
+  useEffect(() => {
+    if (requestedDockTab) {
+      setDockExpanded(true);
+      setDockTab(requestedDockTab.tab);
+    }
+  }, [requestedDockTab]);
 
   useEffect(() => {
     const onPointerMove = (e: PointerEvent) => {
@@ -384,10 +398,16 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
             }
             setDraggedFurniture(null);
           }}
+          placingFurnitureName={placingFurniture?.name ?? null}
+          onTapPlaceFurnitureAt={(x, z) => {
+            if (!placingFurniture) return;
+            onAddPlacedFurniture(placingFurniture, x, z);
+            setPlacingFurniture(null);
+          }}
         />
 
         {/* Minimal Top-Left Context Readout */}
-        <div className="absolute top-3 left-3 sm:top-5 sm:left-5 z-10 pointer-events-auto max-w-[calc(100vw-24px)] sm:max-w-md">
+        <div className="absolute top-3 left-3 sm:top-5 sm:left-5 z-10 pointer-events-auto max-w-[calc(100vw-24px)] sm:max-w-lg">
           <div className="bg-[#FFFFFF]/95 border border-black/10 rounded-xl px-3.5 py-2.5 shadow-sm">
             <div className="flex items-center gap-2 text-[11px] font-mono text-[#78716C]">
               <span className="truncate">Spark Interior Designs</span>
@@ -400,24 +420,53 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
               <p className="text-xs sm:text-sm font-semibold text-[#141517] truncate">
                 {activeCombo.name} · Drag swatches &amp; furniture in 3D
               </p>
-              <button
-                onClick={onAskVastuAI}
-                className="text-[11px] font-medium text-[#B45309] hover:text-[#92400E] whitespace-nowrap shrink-0 cursor-pointer"
-              >
-                Vastu AI →
-              </button>
+              <div className="flex items-center gap-2.5 shrink-0">
+                {dockTab !== "furniture" && (
+                  <button
+                    onClick={() => {
+                      setDockExpanded(true);
+                      setDockTab("furniture");
+                    }}
+                    className="text-[11px] font-semibold text-[#141517] hover:text-[#B45309] whitespace-nowrap cursor-pointer"
+                  >
+                    + Furniture
+                  </button>
+                )}
+                <button
+                  onClick={onAskVastuAI}
+                  className="text-[11px] font-medium text-[#B45309] hover:text-[#92400E] whitespace-nowrap cursor-pointer"
+                >
+                  Vastu AI →
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Selected Furniture Micro-Controls (Desktop & Mobile Easy Move/Rotate) */}
-        {selectedPlaced && (
-          <div className="absolute top-[74px] right-3 sm:top-5 sm:right-5 z-20 pointer-events-auto max-w-[calc(100vw-24px)] sm:max-w-sm bg-white/95 border border-[#B45309]/40 rounded-xl px-3 py-2.5 shadow-md">
+        {/* Armed Mobile/Desktop Tap-Floor Placement Cancel Pill */}
+        {placingFurniture && (
+          <div className="absolute top-[74px] left-3 sm:top-20 sm:left-5 z-20 pointer-events-auto bg-[#141517] text-white rounded-xl px-3 py-2 shadow-md flex items-center gap-2.5">
+            <Crosshair className="w-3.5 h-3.5 text-[#F59E0B] shrink-0" />
+            <span className="text-xs font-medium">
+              Tap anywhere on the 3D floor to drop <strong>{placingFurniture.name}</strong>
+            </span>
+            <button
+              onClick={() => setPlacingFurniture(null)}
+              className="text-[11px] text-white/75 hover:text-white underline cursor-pointer shrink-0"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+
+        {/* Selected Furniture Micro-Controls (Desktop & Mobile Easy Move/Rotate + Vendor Link) */}
+        {selectedPlaced && !placingFurniture && (
+          <div className="absolute top-[74px] left-3 right-3 sm:left-auto sm:top-5 sm:right-5 z-20 pointer-events-auto sm:max-w-sm bg-white/95 border border-[#B45309]/40 rounded-xl px-3 py-2.5 shadow-md">
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
                 <p className="text-[10px] font-mono text-[#B45309] flex items-center gap-1">
                   <Move className="w-3 h-3" />
-                  <span>SELECTED IN 3D · DRAG TO MOVE</span>
+                  <span>SELECTED IN 3D · DRAG OR NUDGE TO MOVE</span>
                 </p>
                 <p className="text-xs font-semibold text-[#141517] truncate">
                   {selectedPlaced.name}
@@ -425,7 +474,7 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
               </div>
               <button
                 onClick={() => onSelectPlacedFurniture(null)}
-                className="p-1.5 rounded-lg text-[#78716C] hover:text-[#141517] hover:bg-black/5 cursor-pointer"
+                className="p-1.5 rounded-lg text-[#78716C] hover:text-[#141517] hover:bg-black/5 cursor-pointer shrink-0"
                 aria-label="Done editing furniture"
               >
                 <X className="w-3.5 h-3.5" />
@@ -439,7 +488,7 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
                 <RotateCw className="w-3 h-3" />
                 <span>Rotate 45°</span>
               </button>
-              <div className="inline-flex items-center gap-1 bg-[#FAF9F6] border border-black/10 rounded-lg p-0.5">
+              <div className="inline-flex items-center gap-0.5 bg-[#FAF9F6] border border-black/10 rounded-lg p-0.5">
                 <button
                   onClick={() => nudgeSelected(-0.4, 0)}
                   className="px-2 py-1 text-[11px] font-mono hover:bg-white rounded cursor-pointer"
@@ -469,6 +518,17 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
                   →
                 </button>
               </div>
+              {isSubscribed && selectedPlaced.vendorUrl && (
+                <a
+                  href={selectedPlaced.vendorUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="min-h-[34px] px-2.5 py-1 rounded-lg border border-[#B45309]/40 bg-[#FAF7F2] text-[#92400E] text-[11px] font-semibold inline-flex items-center gap-1 hover:bg-[#B45309] hover:text-white transition-colors"
+                >
+                  <span>Order</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
               <button
                 onClick={() => onRemovePlacedFurniture(selectedPlaced.instanceId)}
                 className="min-h-[34px] px-2.5 py-1 rounded-lg bg-red-50 text-red-700 border border-red-200 text-[11px] font-medium inline-flex items-center gap-1 hover:bg-red-100 cursor-pointer"
@@ -852,36 +912,74 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
 
                 {dockTab === "furniture" && (
                   <div className="space-y-3">
-                    {/* Add & Drag Designer Collection (Sophia Key & George Buildings) */}
+                    {/* Add, Tap-Floor Place & Drag Designer Collection (Sophia Key & George Buildings) */}
                     <div>
-                      <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
-                        <p className="text-[11px] font-semibold text-[#141517]">
-                          Add &amp; Drag Designer Furniture (Sophia Key &amp; George Collection)
-                        </p>
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                          {[
+                            { id: "all", label: `All (${PLACEABLE_FURNITURE_CATALOG.length})` },
+                            { id: "George Buildings", label: "George Buildings" },
+                            { id: "Sophia Key Designer", label: "Sophia Key" },
+                            { id: "Sofas & Lounge", label: "Sofas" },
+                            { id: "Dining & Stools", label: "Dining" },
+                            { id: "Cabinets & Consoles", label: "Cabinets" },
+                            { id: "Tables & Decor", label: "Tables & Decor" },
+                          ].map((flt) => (
+                            <button
+                              key={flt.id}
+                              type="button"
+                              onClick={() => setFurnitureFilter(flt.id)}
+                              className={`min-h-[30px] px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap shrink-0 border transition-colors cursor-pointer ${
+                                furnitureFilter === flt.id
+                                  ? "bg-[#141517] text-white border-[#141517]"
+                                  : "bg-[#FAF9F6] text-[#57534E] border-black/10 hover:text-[#141517]"
+                              }`}
+                            >
+                              {flt.label}
+                            </button>
+                          ))}
+                        </div>
                         <span className="text-[10px] font-mono text-[#78716C]">
-                          Tap &ldquo;+ Add&rdquo; or drag onto 3D floor · Drag items inside room to reposition
+                          Drag grip, tap &ldquo;+ Drop&rdquo;, or &ldquo;Tap Floor&rdquo; on mobile
                         </span>
                       </div>
 
-                      <div className="flex items-stretch gap-2 overflow-x-auto no-scrollbar pb-1">
-                        {PLACEABLE_FURNITURE_CATALOG.map((item) => {
+                      <div className="flex items-stretch gap-2.5 overflow-x-auto no-scrollbar pb-1">
+                        {PLACEABLE_FURNITURE_CATALOG.filter(
+                          (item) =>
+                            furnitureFilter === "all" ||
+                            item.collection === furnitureFilter ||
+                            item.categoryTag === furnitureFilter
+                        ).map((item) => {
                           const locked = item.proOnly && !isSubscribed;
+                          const isPlacingThis = placingFurniture?.id === item.id;
                           return (
                             <div
                               key={item.id}
-                              draggable
-                              onDragStart={() => setDraggedFurniture(item)}
+                              draggable={!locked}
+                              onDragStart={() => {
+                                if (!locked) setDraggedFurniture(item);
+                              }}
                               onDragEnd={() => setDraggedFurniture(null)}
-                              className="shrink-0 w-[215px] rounded-xl border border-black/10 bg-[#FAF9F6] hover:border-[#B45309] p-2 flex flex-col justify-between gap-1.5 transition-colors cursor-grab active:cursor-grabbing"
+                              className={`shrink-0 w-[238px] rounded-xl border p-2.5 flex flex-col justify-between gap-2 transition-colors ${
+                                isPlacingThis
+                                  ? "border-[#B45309] bg-[#FAF7F2]"
+                                  : "border-black/10 bg-[#FAF9F6] hover:border-[#B45309]"
+                              } ${locked ? "" : "cursor-grab active:cursor-grabbing"}`}
                             >
                               <div className="flex items-start justify-between gap-1.5">
                                 <div className="flex items-center gap-1.5 min-w-0">
                                   <span
-                                    onPointerDown={(e) =>
-                                      startFurnitureTouchDrag(e, item)
-                                    }
-                                    className="touch-none inline-flex items-center justify-center p-1 -ml-1 text-[#78716C] shrink-0"
-                                    aria-label={`Drag ${item.name} into 3D room`}
+                                    onPointerDown={(e) => {
+                                      if (locked) {
+                                        promptUpgrade(item.name);
+                                        return;
+                                      }
+                                      startFurnitureTouchDrag(e, item);
+                                    }}
+                                    className="touch-none inline-flex items-center justify-center p-1.5 -ml-1 rounded-md bg-white border border-black/10 text-[#57534E] shrink-0"
+                                    aria-label={`Drag ${item.name} onto 3D floor`}
+                                    title="Drag onto 3D floor"
                                   >
                                     <GripVertical className="w-3.5 h-3.5" />
                                   </span>
@@ -900,41 +998,65 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
                                 </div>
                               </div>
 
-                              <div className="flex items-center justify-between gap-2 pt-1">
-                                <span className="text-[10px] text-[#57534E] truncate">
-                                  {item.materialNote}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    if (ignoreNextClickRef.current) {
-                                      ignoreNextClickRef.current = false;
-                                      return;
-                                    }
-                                    if (locked) {
-                                      promptUpgrade(item.name);
-                                      return;
-                                    }
-                                    onAddPlacedFurniture(item);
-                                  }}
-                                  className={`shrink-0 min-h-[28px] px-2 py-1 rounded-lg text-[10px] font-semibold inline-flex items-center gap-1 cursor-pointer ${
-                                    locked
-                                      ? "bg-[#EFECE6] text-[#92400E]"
-                                      : "bg-[#141517] text-white hover:bg-[#B45309]"
-                                  }`}
-                                >
-                                  {locked ? (
-                                    <>
-                                      <Lock className="w-2.5 h-2.5" />
-                                      <span>PRO</span>
-                                    </>
-                                  ) : (
-                                    <>
+                              <p className="text-[10px] text-[#57534E] truncate">
+                                {item.materialNote}
+                              </p>
+
+                              <div className="flex items-center justify-between gap-1.5 pt-1 border-t border-black/6">
+                                {locked ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => promptUpgrade(item.name)}
+                                    className="w-full min-h-[30px] px-2.5 py-1 rounded-lg bg-[#EFECE6] text-[#92400E] text-[10px] font-semibold inline-flex items-center justify-center gap-1 cursor-pointer"
+                                  >
+                                    <Lock className="w-3 h-3" />
+                                    <span>Subscribe to Place &amp; Shop</span>
+                                  </button>
+                                ) : (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (ignoreNextClickRef.current) {
+                                          ignoreNextClickRef.current = false;
+                                          return;
+                                        }
+                                        setPlacingFurniture(null);
+                                        onAddPlacedFurniture(item);
+                                      }}
+                                      className="min-h-[30px] px-2 py-1 rounded-lg bg-[#141517] text-white hover:bg-[#B45309] text-[10px] font-semibold inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                                    >
                                       <Plus className="w-3 h-3" />
                                       <span>Add</span>
-                                    </>
-                                  )}
-                                </button>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setPlacingFurniture(isPlacingThis ? null : item)
+                                      }
+                                      className={`min-h-[30px] px-2 py-1 rounded-lg border text-[10px] font-semibold inline-flex items-center gap-1 cursor-pointer whitespace-nowrap ${
+                                        isPlacingThis
+                                          ? "bg-[#B45309] text-white border-[#B45309]"
+                                          : "bg-white text-[#141517] border-black/15 hover:border-[#B45309]"
+                                      }`}
+                                    >
+                                      <Crosshair className="w-3 h-3" />
+                                      <span>{isPlacingThis ? "Tap Floor" : "Place"}</span>
+                                    </button>
+                                    {isSubscribed && (
+                                      <a
+                                        href={item.vendorUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="min-h-[30px] px-2 py-1 rounded-lg text-[10px] font-semibold text-[#92400E] hover:underline inline-flex items-center gap-0.5 ml-auto whitespace-nowrap"
+                                        title={`Shop direct at ${item.vendorLabel}`}
+                                      >
+                                        <span>Shop</span>
+                                        <ExternalLink className="w-2.5 h-2.5" />
+                                      </a>
+                                    )}
+                                  </>
+                                )}
                               </div>
                             </div>
                           );
@@ -946,7 +1068,7 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
                     {placedFurniture.length > 0 && (
                       <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1 border-t border-black/8">
                         <span className="text-[10px] font-mono text-[#78716C] shrink-0">
-                          IN 3D ROOM ({placedFurniture.length}):
+                          IN 3D ROOM ({placedFurniture.length}) — TAP TO MOVE:
                         </span>
                         {placedFurniture.map((inst) => {
                           const isSel =

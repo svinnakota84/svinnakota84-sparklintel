@@ -159,6 +159,12 @@ export interface FurnitureOption {
   proOnly: boolean;
 }
 
+export type FurnitureCategoryTag =
+  | "Sofas & Lounge"
+  | "Dining & Stools"
+  | "Cabinets & Consoles"
+  | "Tables & Decor";
+
 export type PlaceableFurnitureShape =
   | "boucle-sofa"
   | "travertine-dining"
@@ -175,6 +181,9 @@ export interface PlaceableFurnitureSpec {
   id: string;
   name: string;
   collection: "Sophia Key Designer" | "George Buildings" | "Spark Studio";
+  categoryTag: FurnitureCategoryTag;
+  vendorUrl: string;
+  vendorLabel: string;
   shape: PlaceableFurnitureShape;
   dimensions: string;
   materialNote: string;
@@ -191,6 +200,8 @@ export interface PlacedFurnitureInstance {
   specId: string;
   name: string;
   collection: string;
+  vendorUrl?: string;
+  vendorLabel?: string;
   shape: PlaceableFurnitureShape;
   primaryHex: string;
   accentHex: string;

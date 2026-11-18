@@ -361,6 +361,19 @@ export const Casting3DViewer: React.FC<Casting3DViewerProps> = ({
               portalArch.userData.castZone = "shellAccent";
               structRoot.add(portalArch);
               zoneMeshes.push(portalArch);
+            } else if (p.facadeProfile === "folded-shell") {
+              [-0.25, 0.25].forEach((s) => {
+                const fold = new THREE.Mesh(
+                  new THREE.BoxGeometry(segW * 0.6, 0.18, 1.4),
+                  shellMat
+                );
+                fold.position.set(sx + s * segW, 0.28 + wallH + 0.38, wallZ + 0.18);
+                fold.rotation.z = s < 0 ? 0.38 : -0.38;
+                fold.castShadow = true;
+                fold.userData.castZone = "shellAccent";
+                structRoot.add(fold);
+                zoneMeshes.push(fold);
+              });
             }
 
             for (let si = -3; si <= 3; si++) {
@@ -374,19 +387,73 @@ export const Casting3DViewer: React.FC<Casting3DViewerProps> = ({
               zoneMeshes.push(slat);
             }
           } else {
-            // Cast Concrete Wall Panel + Coping Stone
+            // Cast Concrete Wall Panel styled by architectural facadeProfile
             if (!p.xrayMode) {
-              const wallPanel = new THREE.Mesh(
-                new THREE.BoxGeometry(segW - 0.14, wallH, 0.3),
-                i % 2 === 0 ? concreteMat : shellMat
+              if (p.facadeProfile === "folded-shell") {
+                [-0.24, 0.24].forEach((offset) => {
+                  const angled = new THREE.Mesh(
+                    new THREE.BoxGeometry(segW * 0.56, wallH, 0.24),
+                    offset < 0 ? concreteMat : shellMat
+                  );
+                  angled.position.set(
+                    sx + offset * segW,
+                    0.28 + wallH / 2,
+                    wallZ + (offset < 0 ? 0.16 : -0.16)
+                  );
+                  angled.rotation.y = offset < 0 ? 0.32 : -0.32;
+                  angled.castShadow = true;
+                  angled.receiveShadow = true;
+                  angled.userData.castZone = offset < 0 ? "concrete" : "shellAccent";
+                  structRoot.add(angled);
+                  zoneMeshes.push(angled);
+                });
+              } else {
+                const wallPanel = new THREE.Mesh(
+                  new THREE.BoxGeometry(segW - 0.14, wallH, 0.3),
+                  i % 2 === 0 ? concreteMat : shellMat
+                );
+                wallPanel.position.set(sx, 0.28 + wallH / 2, wallZ);
+                wallPanel.castShadow = true;
+                wallPanel.receiveShadow = true;
+                wallPanel.userData.castZone =
+                  i % 2 === 0 ? "concrete" : "shellAccent";
+                structRoot.add(wallPanel);
+                zoneMeshes.push(wallPanel);
+              }
+            }
+
+            if (p.facadeProfile === "arched-gfrc") {
+              const bayArch = new THREE.Mesh(
+                new THREE.TorusGeometry(segW * 0.34, 0.11, 8, 18, Math.PI),
+                shellMat
               );
-              wallPanel.position.set(sx, 0.28 + wallH / 2, wallZ);
-              wallPanel.castShadow = true;
-              wallPanel.receiveShadow = true;
-              wallPanel.userData.castZone =
-                i % 2 === 0 ? "concrete" : "shellAccent";
-              structRoot.add(wallPanel);
-              zoneMeshes.push(wallPanel);
+              bayArch.position.set(sx, 0.28 + wallH * 0.52, wallZ + 0.2);
+              bayArch.castShadow = true;
+              bayArch.userData.castZone = "shellAccent";
+              structRoot.add(bayArch);
+              zoneMeshes.push(bayArch);
+            } else if (p.facadeProfile === "brise-soleil") {
+              for (let fi = -2; fi <= 2; fi++) {
+                const fin = new THREE.Mesh(
+                  new THREE.BoxGeometry(0.08, wallH * 0.86, 0.44),
+                  shellMat
+                );
+                fin.position.set(sx + fi * (segW * 0.16), 0.28 + wallH * 0.5, wallZ + 0.18);
+                fin.castShadow = true;
+                fin.userData.castZone = "shellAccent";
+                structRoot.add(fin);
+                zoneMeshes.push(fin);
+              }
+            } else if (p.facadeProfile === "cantilever") {
+              const blade = new THREE.Mesh(
+                new THREE.BoxGeometry(segW + 0.18, 0.16, 0.95),
+                shellMat
+              );
+              blade.position.set(sx, 0.28 + wallH + 0.08, wallZ + 0.26);
+              blade.castShadow = true;
+              blade.userData.castZone = "shellAccent";
+              structRoot.add(blade);
+              zoneMeshes.push(blade);
             }
 
             const coping = new THREE.Mesh(
@@ -453,6 +520,7 @@ export const Casting3DViewer: React.FC<Casting3DViewerProps> = ({
         waterPool.position.set(1.8, 0.3, 0.8);
         structRoot.add(waterPool);
 
+        camera.position.set(12.2, 6.4, 14.2);
         controls.target.set(0, Math.max(1.8, wallH * 0.48), -0.4);
       } else if (p.structureForm === "curved-pavilion") {
         // CURVED SHELL & GFRC VAULTED PAVILION STRUCTURE
@@ -553,6 +621,7 @@ export const Casting3DViewer: React.FC<Casting3DViewerProps> = ({
           zoneMeshes.push(rearWall);
         }
 
+        camera.position.set(14.5, 7.8, 16.5);
         controls.target.set(0, pavH * 0.55, 0);
       } else if (p.structureForm === "courtyard-l-wing") {
         // L-SHAPE COURTYARD MULTI-STORY CAST WINGS + REFLECTION POOL
@@ -653,6 +722,7 @@ export const Casting3DViewer: React.FC<Casting3DViewerProps> = ({
           }
         }
 
+        camera.position.set(15.5, 9.8, 17.5);
         controls.target.set(0, Math.max(2.0, totalH * 0.42), 0);
       } else if (p.structureForm === "waffle-atrium") {
         // WAFFLE-SLAB LONG-SPAN COLUMN-FREE EXHIBITION / LIVING HALL
@@ -745,6 +815,7 @@ export const Casting3DViewer: React.FC<Casting3DViewerProps> = ({
           zoneMeshes.push(mul);
         }
 
+        camera.position.set(15.5, 8.8, 17.5);
         controls.target.set(0, hallH * 0.52, 0);
       } else if (p.structureForm === "cantilever-bridge") {
         // CANTILEVER OVERHANG & ELEVATED SKY-BRIDGE ON TWIN SHEAR CORES
@@ -831,6 +902,7 @@ export const Casting3DViewer: React.FC<Casting3DViewerProps> = ({
           zoneMeshes.push(mul);
         }
 
+        camera.position.set(15.5, 8.8, 17.5);
         controls.target.set(0, deckY + deckH * 0.35, 0);
       } else {
         // DEFAULT: MULTI-STORY RESIDENTIAL / COMMERCIAL BUILDING FRAME
@@ -1140,6 +1212,7 @@ export const Casting3DViewer: React.FC<Casting3DViewerProps> = ({
           }
         }
 
+        camera.position.set(16.2 + p.floors * 0.55, 9.2 + p.floors * 1.0, 17.8 + p.floors * 0.55);
         controls.target.set(0, Math.max(2.2, totalH * 0.45), 0);
       }
 

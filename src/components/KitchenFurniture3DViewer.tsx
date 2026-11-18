@@ -44,6 +44,8 @@ export interface Kitchen3DViewerProps {
   onMovePlacedFurniture?: (instanceId: string, x: number, z: number) => void;
   draggedFurnitureName?: string | null;
   onDropNewFurnitureAt?: (x: number, z: number) => void;
+  placingFurnitureName?: string | null;
+  onTapPlaceFurnitureAt?: (x: number, z: number) => void;
 }
 
 const CAMERA_TARGETS: Record<
@@ -451,9 +453,25 @@ function buildPlacedFurnitureMesh(
     tagMesh(canopyB);
   }
 
+  // Generous invisible touch/mouse grab disc at floor level so small furniture items are effortless to drag
+  const grabDisc = new THREE.Mesh(
+    new THREE.CircleGeometry(0.95, 24),
+    new THREE.MeshBasicMaterial({
+      color: "#B45309",
+      transparent: true,
+      opacity: isSelected ? 0.14 : 0.001,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    })
+  );
+  grabDisc.rotation.x = -Math.PI / 2;
+  grabDisc.position.y = 0.024;
+  grabDisc.userData.instanceId = item.instanceId;
+  grp.add(grabDisc);
+
   if (isSelected) {
     const ring = new THREE.Mesh(
-      new THREE.RingGeometry(0.75, 0.88, 32),
+      new THREE.RingGeometry(0.75, 0.9, 32),
       new THREE.MeshBasicMaterial({
         color: "#B45309",
         side: THREE.DoubleSide,
@@ -461,6 +479,7 @@ function buildPlacedFurnitureMesh(
     );
     ring.rotation.x = -Math.PI / 2;
     ring.position.y = 0.032;
+    ring.userData.instanceId = item.instanceId;
     grp.add(ring);
   }
 
@@ -493,6 +512,8 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
   onMovePlacedFurniture,
   draggedFurnitureName = null,
   onDropNewFurnitureAt,
+  placingFurnitureName = null,
+  onTapPlaceFurnitureAt,
 }) => {
   const outerRef = useRef<HTMLDivElement | null>(null);
   const mountRef = useRef<HTMLDivElement | null>(null);
@@ -527,6 +548,8 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
     onMovePlacedFurniture,
     draggedFurnitureName,
     onDropNewFurnitureAt,
+    placingFurnitureName,
+    onTapPlaceFurnitureAt,
   });
   propsRef.current = {
     layout,
@@ -554,6 +577,8 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
     onMovePlacedFurniture,
     draggedFurnitureName,
     onDropNewFurnitureAt,
+    placingFurnitureName,
+    onTapPlaceFurnitureAt,
   };
 
   const sceneApiRef = useRef<{
@@ -1725,7 +1750,15 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
         e.clientX - pointerDownPos.x,
         e.clientY - pointerDownPos.y
       );
-      if (dist > 6) return;
+      if (dist > 8) return;
+
+      // Mobile & desktop 1-tap floor placement when a catalog piece is armed
+      if (propsRef.current.placingFurnitureName && propsRef.current.onTapPlaceFurnitureAt) {
+        const pt = raycastFloorPoint(e.clientX, e.clientY);
+        propsRef.current.onTapPlaceFurnitureAt(pt.x, pt.z);
+        return;
+      }
+
       const rect = renderer.domElement.getBoundingClientRect();
       ndc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       ndc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -1921,10 +1954,12 @@ export const KitchenFurniture3DViewer: React.FC<Kitchen3DViewerProps> = ({
           </div>
         </div>
       )}
-      {(draggedSwatchLabel || draggedFurnitureName) && (
+      {(draggedSwatchLabel || draggedFurnitureName || placingFurnitureName) && (
         <div className="pointer-events-none absolute inset-0 border-2 border-dashed border-[#B45309]/70 flex items-start justify-center pt-16 sm:pt-5">
           <div className="bg-[#141517] text-white text-xs font-medium px-3.5 py-2 rounded-lg shadow-md">
-            {draggedFurnitureName
+            {placingFurnitureName
+              ? `Tap anywhere on the 3D floor to place "${placingFurnitureName}"`
+              : draggedFurnitureName
               ? `Drop "${draggedFurnitureName}" anywhere on the 3D floor`
               : `Drop "${draggedSwatchLabel}" onto ${
                   hoverDropZone === "upper"
