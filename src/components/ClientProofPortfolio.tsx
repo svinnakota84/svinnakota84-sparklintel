@@ -57,72 +57,72 @@ const BUILT_PROJECTS: BuiltProjectCase[] = [
   {
     id: "case-surya-dlf",
     category: "villa",
-    title: "Surya Courtyard Twin Villa",
-    location: "DLF Phase IV, Gurugram",
+    title: "Surya Courtyard Villa — Reference Study",
+    location: "Reference Format · North/Corner Plot Concept",
     areaSqFt: 3420,
-    durationLabel: "13.5 Months Turnkey",
-    methodLabel: "Post-Tensioned RCC · Travertine Cladding",
+    durationLabel: "Est. ~13.5 Mo Reference Schedule",
+    methodLabel: "Post-Tensioned RCC · Travertine Cladding (Concept)",
     imageSrc: portfolioLuxuryVillaImg,
     imageAlt:
-      "Completed modern two-story courtyard villa with warm travertine walls, cantilevered flat concrete slab, and water court",
+      "Reference architectural illustration of a modern two-story courtyard villa with warm travertine walls and cantilevered concrete slab",
     outcomeSummary:
-      "Built from a North-facing corner plot using full 3D twin sign-off prior to foundation excavation. Zero rework orders across 48 structural columns.",
+      "Reference design study showing how a North-facing corner plot can be modeled in 3D twin preview prior to local licensed engineer stamping.",
     beforeAfterNote:
-      "Before: Narrow irregular 50×68 ft lot with dark central staircase · Outcome: Sunlit Ishanya water court & column-free 26 ft living span.",
+      "Reference Scenario: Narrow 50×68 ft plot planning concept · Sunlit Ishanya water court & 26 ft living span study (illustrative only).",
     targetTab: "plans",
     targetActionLabel: "Inspect Structural Plan",
   },
   {
     id: "case-calacatta-kitchen",
     category: "interior",
-    title: "Fluted Oak & Calacatta Chef Pavilion",
-    location: "Indiranagar, Bengaluru",
+    title: "Fluted Oak & Calacatta Chef Pavilion — Reference",
+    location: "Reference Format · Open Kitchen Concept",
     areaSqFt: 1180,
-    durationLabel: "9 Weeks Fabrication",
+    durationLabel: "Est. ~9 Wk Studio Joinery Study",
     methodLabel: "Fluted White Oak · Calacatta Gold Waterfall",
     imageSrc: portfolioKitchenInteriorImg,
     imageAlt:
-      "Luxury open-concept fluted white oak kitchen with Calacatta marble waterfall island and curved boucle chairs",
+      "Reference interior rendering of an open-concept fluted white oak kitchen with Calacatta marble waterfall island and curved boucle chairs",
     outcomeSummary:
-      "Homeowners tested 8 cabinet combinations in 3D before ordering bespoke stone slabs and sculptural Sophia Key lounge pieces directly.",
+      "Reference style study illustrating cabinet palette testing in 3D alongside Sophia Key & George Buildings furniture linked directly to vendor stores.",
     beforeAfterNote:
-      "Before: Closed 1990s galley kitchen cut off from garden · Outcome: Seamless indoor-outdoor chef island rated Agneya Vastu.",
+      "Reference Scenario: Converting a closed galley concept into an indoor-outdoor chef island rated Agneya Vastu (for reference only).",
     targetTab: "studio",
     targetActionLabel: "Open 3D Kitchen Studio",
   },
   {
     id: "case-gfrc-gallery",
     category: "commercial",
-    title: "Lintel Arched Gallery & Commercial Hub",
-    location: "Jubilee Hills, Hyderabad",
+    title: "Lintel Arched Gallery & Commercial Casting — Reference",
+    location: "Reference Format · Commercial Shell Study",
     areaSqFt: 6850,
-    durationLabel: "11 Months Shell & Glazing",
+    durationLabel: "Est. ~11 Mo Reference Target",
     methodLabel: "Sculptural GFRC Arches · Board-Formed Concrete",
     imageSrc: portfolioCommercialCastingImg,
     imageAlt:
-      "Commercial gallery building featuring white sculpted GFRC colonnade arches, concrete walls, and bronze-framed storefronts",
+      "Reference architectural concept of a commercial gallery building featuring white sculpted GFRC colonnade arches and concrete walls",
     outcomeSummary:
-      "Prefabricated GFRC arched colonnade cut crane-assembly time by 5 weeks while delivering slim bronze thermal-break storefronts.",
+      "Reference architectural concept demonstrating prefabricated GFRC colonnade geometry and thermal-break glazing for local contractor execution.",
     beforeAfterNote:
-      "Before: Aging single-floor retail shell · Outcome: Two-story sculptural showroom plaza anchored for anchor gallery tenants.",
+      "Reference Scenario: Two-story sculptural showroom envelope concept prepared for local PE review (visual reference only).",
     targetTab: "casting",
     targetActionLabel: "Configure 3D Casting",
   },
   {
     id: "case-modular-goa",
     category: "modular",
-    title: "Prana Modular Retreat Pavilion",
-    location: "Assagao, Goa",
+    title: "Prana Modular Retreat Pavilion — Reference",
+    location: "Reference Format · Coastal Prefab Concept",
     areaSqFt: 1460,
-    durationLabel: "14 Weeks Prefab + Site Pour",
+    durationLabel: "Est. ~14 Wk Prefab Benchmark",
     methodLabel: "Precast Insulated Plinth · Cantilever Canopy",
     imageSrc: portfolioModularTinyVillaImg,
     imageAlt:
-      "Compact modern prefab courtyard pavilion home in tropical garden with cantilevered concrete canopy and glowing glass walls",
+      "Reference concept of a compact modern prefab courtyard pavilion home in tropical garden with cantilevered concrete canopy",
     outcomeSummary:
-      "Engineered with factory-precast structural panels for coastal monsoon resistance, rapid 14-week installation, and minimal site disturbance.",
+      "Reference concept demonstrating factory-precast structural wall panels for coastal weather resilience—subject to local geotechnical testing.",
     beforeAfterNote:
-      "Before: Monsoon-prone orchard plot needing rapid low-waste build · Outcome: Move-in ready acoustic glass pavilion in 98 days.",
+      "Reference Scenario: Compact smart-footprint glass pavilion concept with monsoon drainage study (reference illustration only).",
     targetTab: "plans",
     targetActionLabel: "View Villa Blueprint",
   },
@@ -131,63 +131,63 @@ const BUILT_PROJECTS: BuiltProjectCase[] = [
 const INITIAL_REVIEWS: ClientReviewItem[] = [
   {
     id: "rev-kapoor",
-    authorName: "Raghav & Meera Kapoor",
-    roleOrHome: "Custom Villa Owners",
-    city: "Gurugram",
+    authorName: "Sample Scenario A · Custom Villa Workflow",
+    roleOrHome: "Illustrative Design Use-Case",
+    city: "Reference Concept",
     category: "Residential Villa",
     rating: 5,
-    dateLabel: "October 2026",
-    verifiedScope: "3,420 sq ft Design-Build + Vastu Audit",
-    headline: "Zero surprise extras — every wall color and column locked in 3D first",
+    dateLabel: "Reference Case",
+    verifiedScope: "3,420 sq ft 3D Twin + Wall Color Study",
+    headline: "Locking wall colors and structural grids in 3D before site work",
     quote:
-      "We checked 5 firms across NCR before choosing Spark&Lintel. Locking our bedroom wall colors, plumbing shafts, and travertine facade in the 3D builder stopped every on-site argument with contractors.",
-    outcomeMetric: "Completed 11 days ahead of milestone schedule",
-    helpfulCount: 28,
+      "Demonstrates how homeowners preview custom bedroom wall colors, plumbing shafts, and travertine facades in 3D prior to negotiating a signed contract with local contractors.",
+    outcomeMetric: "Illustrative workflow benchmark (for reference only)",
+    helpfulCount: 14,
   },
   {
     id: "rev-iyer",
-    authorName: "Siddharth Iyer",
-    roleOrHome: "Penthouse Remodel Client",
-    city: "Bengaluru",
+    authorName: "Sample Scenario B · Kitchen & Vendor Sourcing",
+    roleOrHome: "Illustrative Design Use-Case",
+    city: "Reference Concept",
     category: "Kitchen & Interiors",
     rating: 5,
-    dateLabel: "September 2026",
-    verifiedScope: "L-Island Fluted Kitchen + Vendor Sourcing",
-    headline: "Direct vendor links plus the 3D room drag-and-drop saved weeks",
+    dateLabel: "Reference Case",
+    verifiedScope: "L-Island Fluted Kitchen + Direct Vendor Links",
+    headline: "Testing furniture footprints in 3D before ordering directly from stores",
     quote:
-      "Testing Sophia Key chairs and fluted oak cabinets right next to our Agneya kitchen island gave us full confidence before paying the supplier directly. Nothing looked different in real life.",
-    outcomeMetric: "100% Vastu kitchen sign-off on first inspection",
-    helpfulCount: 19,
+      "Illustrates placing Sophia Key and George Buildings furniture inside the 3D studio next to an Agneya kitchen island prior to purchasing directly on third-party vendor storefronts.",
+    outcomeMetric: "Direct vendor checkout separation (for reference only)",
+    helpfulCount: 11,
   },
   {
     id: "rev-reddy",
-    authorName: "Ananya Reddy",
-    roleOrHome: "Managing Director, Deccan Design House",
-    city: "Hyderabad",
+    authorName: "Sample Scenario C · Commercial GFRC Casting",
+    roleOrHome: "Illustrative Design Use-Case",
+    city: "Reference Concept",
     category: "Commercial & Casting",
     rating: 5,
-    dateLabel: "August 2026",
-    verifiedScope: "2-Story GFRC Arched Commercial Showroom",
-    headline: "Clean structural engineering and crisp precast execution",
+    dateLabel: "Reference Case",
+    verifiedScope: "2-Story GFRC Arched Facade Study",
+    headline: "3D casting geometry preview ready for local PE structural stamping",
     quote:
-      "Our landlord needed an iconic façade without six months of messy wet formwork. The 3D casting X-ray review aligned our local PE stamp cleanly and the GFRC arches went up in three weeks.",
-    outcomeMetric: "35% faster envelope erection than cast-in-situ",
-    helpfulCount: 24,
+      "Shows how commercial clients configure arched GFRC colonnades, waffle slabs, or boundary walls in 3D before handing schematic drawings to a licensed local engineer.",
+    outcomeMetric: "Requires local PE stamp prior to pour (reference only)",
+    helpfulCount: 12,
   },
   {
     id: "rev-desai",
-    authorName: "Vikram & Kavita Desai",
-    roleOrHome: "Modular Courtyard Residence",
-    city: "Goa",
+    authorName: "Sample Scenario D · Modular Retreat Study",
+    roleOrHome: "Illustrative Design Use-Case",
+    city: "Reference Concept",
     category: "Modular Home",
     rating: 5,
-    dateLabel: "July 2026",
-    verifiedScope: "1,460 sq ft Prefab Concrete & Glass Retreat",
-    headline: "Felt like a calm boutique resort delivered like clockwork",
+    dateLabel: "Reference Case",
+    verifiedScope: "1,460 sq ft Prefab Concrete & Glass Concept",
+    headline: "Stage-gated design clarity before signing local construction contracts",
     quote:
-      "We wanted a compact smart-footprint home that handled coastal rain without damp walls. Weekly stage photos and stage-gated milestone sign-offs kept our family stress-free from Mumbai.",
-    outcomeMetric: "98-day foundation-to-handover delivery",
-    helpfulCount: 31,
+      "Shows how smart-footprint prefab concepts are configured in 3D with custom paint schemes and Vastu checks before engaging local site erectors.",
+    outcomeMetric: "Stage-gated reference model (for reference only)",
+    helpfulCount: 15,
   },
 ];
 
@@ -356,23 +356,53 @@ export const ClientProofPortfolio: React.FC<ClientProofPortfolioProps> = ({
       aria-labelledby="portfolio-proof-heading"
       className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12 border-t border-black/8"
     >
-      {/* 01. Realistic Built Portfolio & Style Ideabook */}
+      {/* Prominent New-Company Reference-Only Legal Shield Notice */}
+      <div className="rounded-2xl border border-[#B45309]/30 bg-[#FAF7F2] p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <ShieldCheck className="w-5 h-5 text-[#B45309] shrink-0 mt-0.5" />
+          <div className="space-y-1 text-xs text-[#57534E] leading-relaxed">
+            <p className="text-sm font-semibold text-[#141517]">
+              Legal Shield Notice: Finished &amp; Completed Homes Shown Below Are{" "}
+              <span className="text-[#92400E] underline underline-offset-2">
+                For Reference Only
+              </span>
+            </p>
+            <p>
+              <strong>Spark&amp;Lintel Design-Builders (Radiant Spark LLC)</strong>{" "}
+              is a newly launched company. All finished home photos, commercial
+              renderings, timelines, and sample scenarios below are{" "}
+              <strong>illustrative design references &amp; capability concepts only</strong>—not
+              prior completed builds by our firm. They do not create guarantees
+              or grounds for legal claims by customers, vendors, or suppliers.
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onOpenLegalShield}
+          className="min-h-[40px] px-4 py-2 rounded-xl bg-[#141517] text-white text-xs font-semibold hover:bg-[#B45309] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+        >
+          Read Legal Shield
+        </button>
+      </div>
+
+      {/* 01. Architectural Reference Portfolio & Style Ideabook */}
       <div className="space-y-6">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
           <div className="max-w-2xl">
             <p className="text-xs font-mono text-[#B45309] tracking-wide">
-              01. Built Reality Proof · Gurugram · Bengaluru · Hyderabad · Goa
+              01. Architectural Reference Portfolio · For Reference &amp; Design Planning Only
             </p>
             <h2
               id="portfolio-proof-heading"
               className="font-display text-2xl sm:text-3xl font-semibold text-[#141517] mt-1"
             >
-              Completed Homes, Modular Pavilions &amp; Commercial Casting
+              Reference Homes, Modular Pavilions &amp; Commercial Casting Concepts
             </h2>
             <p className="text-sm text-[#57534E] mt-1.5 leading-relaxed">
-              See how our 3D designs translate into real stone, concrete, and
-              joinery—and bookmark your favorite styles directly into your
-              negotiation brief.
+              Explore visual style benchmarks showing how 3D concepts translate
+              into stone, concrete, and joinery—and bookmark reference styles
+              into your custom brief. (Visuals are illustrative references only.)
             </p>
           </div>
 
@@ -433,6 +463,9 @@ export const ClientProofPortfolio: React.FC<ClientProofPortfolioProps> = ({
                 </p>
               </div>
             )}
+            <span className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-[#141517]/85 text-white text-[10px] font-mono tracking-wide">
+              Reference Concept · Visual Inspiration Only
+            </span>
           </div>
 
           <div className="lg:col-span-5 p-5 sm:p-7 flex flex-col justify-between gap-5">
@@ -506,7 +539,7 @@ export const ClientProofPortfolio: React.FC<ClientProofPortfolioProps> = ({
                   className="rounded-2xl border border-black/10 bg-white overflow-hidden flex flex-col justify-between"
                 >
                   <div>
-                    <div className="aspect-[4/3] bg-[#E8E2D6] overflow-hidden">
+                    <div className="relative aspect-[4/3] bg-[#E8E2D6] overflow-hidden">
                       {!brokenImages[project.id] ? (
                         <img
                           src={project.imageSrc}
@@ -528,6 +561,9 @@ export const ClientProofPortfolio: React.FC<ClientProofPortfolioProps> = ({
                           </p>
                         </div>
                       )}
+                      <span className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded bg-[#141517]/85 text-white text-[10px] font-mono">
+                        For Reference Only
+                      </span>
                     </div>
 
                     <div className="p-5 space-y-2">
@@ -582,23 +618,23 @@ export const ClientProofPortfolio: React.FC<ClientProofPortfolioProps> = ({
         )}
       </div>
 
-      {/* 02. 5-Stage Customer Satisfaction & Stage-Gated Transparency Promise */}
+      {/* 02. Planned 5-Stage Design-Build Workflow & Governance */}
       <div className="rounded-2xl border border-black/10 bg-white p-5 sm:p-7 space-y-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-black/8">
           <div>
             <p className="text-xs font-mono text-[#B45309]">
-              02. Design-Build Accountability · Inspired by Verified Turnkey Practices
+              02. Planned Design-Build Accountability · Reference Governance Model
             </p>
             <h2 className="font-display text-2xl font-semibold text-[#141517] mt-1">
-              How We Guarantee Customer Satisfaction Before &amp; After Handover
+              Planned 5-Stage Customer Satisfaction &amp; Milestone Framework
             </h2>
           </div>
 
           <div className="flex items-center gap-5 text-xs font-mono tabular-nums shrink-0">
             <div>
-              <p className="text-[#78716C]">Verified Rating</p>
+              <p className="text-[#78716C]">Reference Standard</p>
               <p className="text-base font-semibold text-[#141517]">
-                4.9 / 5.0 Avg
+                Stage-Gated QA
               </p>
             </div>
             <div>
@@ -630,15 +666,15 @@ export const ClientProofPortfolio: React.FC<ClientProofPortfolioProps> = ({
         </div>
       </div>
 
-      {/* 03. Verified Client Reviews & Live Feedback Form */}
+      {/* 03. Illustrative Project Scenarios & Early Adopter Feedback */}
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
             <p className="text-xs font-mono text-[#B45309]">
-              03. Verified Homeowner &amp; Commercial Outcomes
+              03. Illustrative Design Scenarios &amp; Early Studio Feedback (Reference Only)
             </p>
             <h2 className="font-display text-2xl font-semibold text-[#141517] mt-1">
-              Client Satisfaction &amp; Delivery Reviews
+              Sample Planning Scenarios &amp; Studio Reviews
             </h2>
           </div>
 
@@ -900,10 +936,15 @@ export const ClientProofPortfolio: React.FC<ClientProofPortfolioProps> = ({
             <ShieldCheck className="w-5 h-5 text-[#F59E0B] shrink-0 mt-0.5" />
             <div className="space-y-1 text-xs text-white/80">
               <p className="text-sm font-semibold text-white">
-                Global Engineering Rigor · Indian Vastu Accuracy · Tri-Party Legal Protection
+                New Company Reference-Only Notice · Tri-Party Legal Shield (Customers · Vendors · Suppliers)
               </p>
               <p>
-                Every design visualization separates digital concept tools from third-party vendor fulfillment and local site contracting—protecting Radiant Spark LLC from customer, supplier, and contractor disputes while preserving buyer clarity.
+                All completed/finished home images and scenarios on this platform
+                are visual references only—not prior builds by our newly launched
+                company. Software visualization tools remain legally separate
+                from third-party vendor stores and local site contractors,
+                shielding Radiant Spark LLC from customer, vendor, and supplier
+                lawsuits.
               </p>
             </div>
           </div>

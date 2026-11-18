@@ -634,7 +634,7 @@ export default function App() {
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
             onOpenNegotiation={() => setNegotiationOpen(true)}
-            onOpenLegalShield={() => openLegal("vendors")}
+            onOpenLegalShield={() => openLegal("reference")}
           />
         )}
       </main>
@@ -646,10 +646,24 @@ export default function App() {
             <strong className="text-[#141517]">
               Spark&amp;Lintel Design-Builders
             </strong>{" "}
-            · Conceptual 3D designs &amp; casting previews require local licensed
-            PE/architect stamping prior to construction.
+            (Radiant Spark LLC) · New company notice: completed home visuals are{" "}
+            <strong className="text-[#141517]">for reference only</strong>,
+            vendor orders stay directly with third-party stores, and 3D concepts
+            require local licensed PE/architect stamping.
           </p>
           <div className="flex flex-wrap items-center gap-4 shrink-0">
+            <button
+              onClick={() => openLegal("reference")}
+              className="font-semibold text-[#92400E] hover:text-[#141517] underline-offset-4 hover:underline cursor-pointer"
+            >
+              Reference Homes Shield
+            </button>
+            <button
+              onClick={() => openLegal("vendors")}
+              className="hover:text-[#141517] underline-offset-4 hover:underline cursor-pointer"
+            >
+              Vendor &amp; Supplier Shield
+            </button>
             <button
               onClick={() => openLegal("engineering")}
               className="hover:text-[#141517] underline-offset-4 hover:underline cursor-pointer"
@@ -669,10 +683,10 @@ export default function App() {
               Global Privacy
             </button>
             <button
-              onClick={() => openLegal("terms")}
+              onClick={() => openLegal("global")}
               className="hover:text-[#141517] underline-offset-4 hover:underline cursor-pointer"
             >
-              Terms &amp; Global Shield
+              Global Non-Sue Shield
             </button>
           </div>
         </div>

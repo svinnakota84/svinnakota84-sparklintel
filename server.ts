@@ -114,7 +114,8 @@ GUIDELINES:
 - Give clear, structured, actionable architectural + Vastu-Jyotish advice grounded in real engineering and traditional Vastu/Vedic principles.
 - Reference the customer's exact active 3D finishes, plan details, or Rashi/facing profile when relevant.
 - Keep responses concise, scannable (short sections with clear plain-text headings and bullet points), and practical — avoid vague fluff or fatalistic fear-mongering; always pair any Vastu concern with constructive structural or interior remedies.
-- Never claim to replace a licensed local structural engineer stamp or personal astrologer's full Janma Kundali muhurta reading; note this briefly when giving critical buying advice.`;
+- Never claim to replace a licensed local structural engineer stamp or personal astrologer's full Janma Kundali muhurta reading; note this briefly when giving critical buying advice.
+- Legal Shield & New-Company Transparency: If asked about finished/completed homes, vendor stores (George Buildings, Sophia Key Store), warranties, or disputes, clearly state that finished home visuals are illustrative architectural references only (as Spark&Lintel / Radiant Spark LLC is a new company) and that third-party vendor orders and site contractor execution remain legally separate from our visualization platform.`;
 
       const formattedConversation = messages
         .slice(-10)

@@ -44,11 +44,12 @@ export function generateLocalAdvisorReply(
     ].join("\n\n");
   }
 
-  if (q.includes("vendor") || q.includes("george") || q.includes("sophia") || q.includes("damage") || q.includes("furniture") || q.includes("legal")) {
+  if (q.includes("vendor") || q.includes("george") || q.includes("sophia") || q.includes("damage") || q.includes("furniture") || q.includes("legal") || q.includes("reference") || q.includes("completed") || q.includes("finished") || q.includes("sue")) {
     return [
-      `Subscribed Architect Pro & Turnkey Studio members can browse and place furniture curated alongside George Buildings, Sophia Key Designer Furniture, and Sophiakey Furniture Store:`,
-      `• Direct Vendor Fulfillment: Orders placed on third-party vendor websites are contracts strictly between you and that seller. Pricing, warranty, customs, and delivery are set by the seller.`,
-      `• Damage or Missing Item Claims: Retain photos and delivery receipts and file damage/return claims directly with the selling vendor and freight carrier. Spark&Lintel / Radiant Spark LLC provides visualization tools only and is legally shielded from supplier or transit claims.`,
+      `Spark&Lintel (Radiant Spark LLC) Global Legal Shield & Reference Disclosure:`,
+      `• Reference-Only Finished & Completed Homes: Because Spark&Lintel is a newly launched company, all finished home images, modular retreats, commercial renderings, timelines, and sample scenarios on the site are illustrative visual references and design capability concepts ONLY—not past builds constructed by our firm.`,
+      `• Direct Vendor Fulfillment: Furniture orders placed on third-party stores (George Buildings, Sophia Key Store, @sophiakey_designerfurniture) are contracts strictly between you and that seller. Pricing, warranty, customs, and delivery are handled solely by the selling vendor.`,
+      `• Tri-Party Non-Liability Shield: File delivery damage or return claims directly with the selling vendor and carrier. Customers, vendors, and suppliers agree not to hold Radiant Spark LLC liable or file suit over reference visuals, third-party vendor orders, or independent local contractor site work.`,
     ].join("\n\n");
   }
 

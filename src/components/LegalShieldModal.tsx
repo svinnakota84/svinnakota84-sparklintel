@@ -2,12 +2,13 @@ import React, { useState } from "react";
 import { Scale, ShieldCheck, X } from "lucide-react";
 
 export type LegalSectionId =
+  | "reference"
   | "engineering"
   | "vastu"
   | "privacy"
   | "terms"
-  | "global"
-  | "vendors";
+  | "vendors"
+  | "global";
 
 export function VendorTerms() {
   return (
@@ -64,15 +65,19 @@ export function VendorTerms() {
       </p>
       <p>
         <strong className="text-[#141517]">
-          4. Contractor, Fabrication &amp; Local Approval Separation:
+          4. Reference Homes &amp; Contractor Separation:
         </strong>{" "}
-        Unless a separate signed turnkey construction agreement is executed with
-        Radiant Spark LLC, independent civil contractors, modular/prefab
-        erectors, and site fabricators remain solely responsible for local
-        municipal approvals, labor safety, site concrete curing, and final
-        workmanship—neither customers nor contractors/suppliers may bring
-        site-execution or defect claims against our digital design platform.
-        Nothing herein waives non-excludable mandatory statutory rights.
+        All completed/finished home images and sample interiors displayed in the
+        app are architectural reference concepts only—not prior builds delivered
+        by Radiant Spark LLC. Unless a separate signed turnkey construction
+        agreement is executed with Radiant Spark LLC, independent civil
+        contractors, modular/prefab erectors, and site fabricators remain solely
+        responsible for local municipal approvals, labor safety, site concrete
+        curing, and final workmanship. Neither customers, vendors, nor
+        suppliers/contractors may bring misrepresentation, delivery-delay,
+        site-execution, or defect lawsuits against our new company&apos;s digital
+        visualization platform. Nothing herein waives non-excludable mandatory
+        statutory rights.
       </p>
     </div>
   );
@@ -128,12 +133,13 @@ export const LegalShieldModal: React.FC<LegalShieldModalProps> = ({
         <div className="px-4 sm:px-6 py-2.5 border-b border-black/8 bg-[#FAF9F6] flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
           {(
             [
+              { id: "reference", label: "Reference Homes Shield" },
+              { id: "vendors", label: "Vendors & Suppliers" },
               { id: "engineering", label: "Engineering & Casting" },
+              { id: "terms", label: "Quotes & Subscriptions" },
               { id: "vastu", label: "Vastu & Astrology" },
               { id: "privacy", label: "Global Privacy" },
-              { id: "terms", label: "Quotes & Subscriptions" },
-              { id: "vendors", label: "Vendor Orders & Claims" },
-              { id: "global", label: "Applicable Rights" },
+              { id: "global", label: "Global Non-Sue Shield" },
             ] as { id: LegalSectionId; label: string }[]
           ).map((tab) => (
             <button
@@ -152,6 +158,83 @@ export const LegalShieldModal: React.FC<LegalShieldModalProps> = ({
 
         {/* Body Content */}
         <div className="p-6 overflow-y-auto space-y-4 text-sm text-[#57534E] leading-relaxed">
+          {section === "reference" && (
+            <>
+              <div className="rounded-xl border border-[#B45309]/30 bg-[#FAF7F2] p-4 text-xs text-[#78350F] leading-relaxed">
+                <strong className="text-[#141517]">
+                  New Company Transparency &amp; Non-Reliance Notice:
+                </strong>{" "}
+                Spark&amp;Lintel Design-Builders (operated by{" "}
+                <strong className="text-[#141517]">Radiant Spark LLC</strong>)
+                is a newly launched architectural visualization and design-planning
+                company. All finished or completed homes, interiors, villas,
+                pavilions, timelines, and sample scenarios shown across this
+                website and mobile app are{" "}
+                <strong className="text-[#141517]">
+                  illustrative visual references and design capability concepts
+                  ONLY
+                </strong>
+                .
+              </div>
+
+              <h3 className="font-display text-lg font-semibold text-[#141517]">
+                Reference-Only Finished Homes &amp; Tri-Party Covenant Not to Sue
+              </h3>
+              <ul className="list-disc pl-5 space-y-2.5">
+                <li>
+                  <strong className="text-[#141517]">
+                    Completed Homes Are Reference Inspiration Only:
+                  </strong>{" "}
+                  Rendered or photographed completed houses, modular retreats,
+                  kitchens, commercial casting facades, square-footage studies,
+                  and estimated target timelines are displayed solely to help
+                  customers explore aesthetic styles, structural forms, and
+                  material palettes. They do{" "}
+                  <strong className="text-[#141517]">not</strong> represent
+                  historical physical buildings constructed by Radiant Spark LLC
+                  and do not constitute any representation, guarantee, or
+                  warranty of past track record, build price, or handover date.
+                </li>
+                <li>
+                  <strong className="text-[#141517]">
+                    Customer Non-Reliance &amp; Waiver Against Suits:
+                  </strong>{" "}
+                  By browsing reference renders, using 3D tools, or subscribing
+                  to software visualization plans, Customers acknowledge our new
+                  company status and agree not to file lawsuits, consumer
+                  claims, or damages actions against Radiant Spark LLC based on
+                  visual differences between reference images/3D previews and
+                  final site-permitted builds, local contractor execution, or
+                  material batches.
+                </li>
+                <li>
+                  <strong className="text-[#141517]">
+                    Vendor &amp; Supplier Non-Liability &amp; Covenant Not to Sue:
+                  </strong>{" "}
+                  All third-party furniture stores, wholesalers, stone yards,
+                  and building-material suppliers (including{" "}
+                  <em>georgebuildings.com</em>,{" "}
+                  <em>sophiakeyfurniture.store</em>, and{" "}
+                  <em>@sophiakey_designerfurniture</em>) operate strictly
+                  independent businesses. Neither Customers nor Vendors/Suppliers
+                  may sue, implead, join, or seek indemnity from Radiant Spark
+                  LLC for order cancellations, transit damage, customs holds,
+                  non-payment, warranty defects, or intellectual-property /
+                  catalog reference usage.
+                </li>
+                <li>
+                  <strong className="text-[#141517]">
+                    Binding Obligations Require a Separate Signed Contract:
+                  </strong>{" "}
+                  No physical construction warranty, price quote, or project
+                  liability exists unless set forth in a mutually signed Master
+                  Design-Build Agreement reviewed and stamped by a licensed
+                  local Professional Engineer (PE) or Registered Architect.
+                </li>
+              </ul>
+            </>
+          )}
+
           {section === "engineering" && (
             <>
               <h3 className="font-display text-lg font-semibold text-[#141517]">
@@ -317,14 +400,27 @@ export const LegalShieldModal: React.FC<LegalShieldModalProps> = ({
               <ul className="list-disc pl-5 space-y-2">
                 <li>
                   <strong className="text-[#141517]">
-                    Strict Legal Separation From Third-Party Suppliers:
+                    New Company Reference Portfolio Disclosure:
+                  </strong>{" "}
+                  All finished/completed home visuals, reference case briefs, and
+                  illustrative design scenarios shown on the site are strictly{" "}
+                  <strong className="text-[#141517]">
+                    design references and planning benchmarks only
+                  </strong>
+                  —not completed builds executed by Radiant Spark LLC—and carry
+                  zero express or implied reliance warranties.
+                </li>
+                <li>
+                  <strong className="text-[#141517]">
+                    Strict Legal Separation From Customers, Vendors &amp; Suppliers:
                   </strong>{" "}
                   Independent furniture/material websites linked inside the app
                   (George Buildings, Sophia Key Furniture Store, Instagram
-                  galleries) operate their own stores and contracts. Neither
-                  customers nor suppliers/vendors may hold Radiant Spark LLC
-                  liable for third-party goods, transit damage, customs holds,
-                  or vendor non-performance.
+                  galleries) and local suppliers/contractors operate their own
+                  stores and contracts. Customers, vendors, and suppliers alike
+                  waive claims and covenant not to sue or implead Radiant Spark
+                  LLC for third-party goods, transit damage, customs holds,
+                  supplier non-performance, or customer order disputes.
                 </li>
                 <li>
                   <strong className="text-[#141517]">
