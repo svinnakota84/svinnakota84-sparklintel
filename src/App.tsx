@@ -45,7 +45,7 @@ import {
   SubscriptionTier,
   VastuBuyerProfile,
 } from "./types";
-import { LayoutEditor } from "./components/LayoutEditor";
+import { LayoutEditor, SpacePlanner } from "./components/LayoutEditor";
 import { StudioWorkspace } from "./components/StudioWorkspace";
 import { ConstructionPlansView } from "./components/ConstructionPlansView";
 import { CastingStudioView } from "./components/CastingStudioView";
@@ -454,6 +454,7 @@ export default function App() {
         >
           {[
             { id: "studio" as AppTab, label: "Spark Interior Designs" },
+            { id: "planner" as AppTab, label: "Space Planner" },
             { id: "plans" as AppTab, label: "Spark Construction" },
             { id: "casting" as AppTab, label: "3D Casting" },
             { id: "advisor" as AppTab, label: "Vastu & Astrology AI" },
@@ -603,6 +604,8 @@ export default function App() {
           />
         )}
 
+        {activeTab === "planner" && <SpacePlanner onPlans={() => setActiveTab("pricing")} />}
+
         {activeTab === "pricing" && (
           <SubscriptionView
             currentTier={subscriptionTier}
@@ -751,10 +754,11 @@ export default function App() {
       {/* Mobile Bottom Thumb-Zone Navigation Bar */}
       <nav
         aria-label="Mobile Navigation"
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 h-[56px] bg-white border-t border-black/10 grid grid-cols-5 items-center"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 h-[56px] bg-white border-t border-black/10 grid grid-cols-6 items-center"
       >
         {[
           { id: "studio" as AppTab, label: "Interiors", icon: Move3d },
+          { id: "planner" as AppTab, label: "Planner", icon: Move3d },
           { id: "plans" as AppTab, label: "Construct", icon: Hammer },
           { id: "casting" as AppTab, label: "Casting", icon: Building2 },
           { id: "advisor" as AppTab, label: "Vastu AI", icon: Compass },

@@ -1,11 +1,14 @@
 import {useEffect, useRef, useState} from "react";
 import type {PointerEvent} from "react";
+import {PLANNER_ITEMS, SPACE_TYPES} from "../data/spacePlanning";
+import type {SpaceType} from "../data/spacePlanning";
 import {VendorTerms} from "./LegalShieldModal";
 
 type Point = {x: number; y: number};
 type Piece = Point & {id: string; kind: string; w: number; d: number; h: number; color: string; source?: string; elevation?: number};
 type Item = {label: string; dims: [number, number, number]; color: string};
-type Mode = "interior" | "casting";
+type Mode = "interior" | "casting" | "planner";
+type Footprint = {width: number; depth: number};
 
 const furniture: Record<string, Item> = {
   sofa: {label: "Bouclé Cloud Sofa", dims: [2.4, .95, .82], color: "#d8cfc0"},
@@ -68,7 +71,7 @@ function project(x: number, y: number, z = 0) {
   return [210 + (x-y)*16, 108 + (x+y)*8 - z*22].join(",");
 }
 
-function shape(piece: Piece, active: boolean) {
+function shape(piece: Piece, active: boolean, projectPoint: typeof project) {
   const {x,y,w,d,h} = piece;
   const parts: Array<[number,number,number,number,number,number]> = [];
   if (piece.kind === "opening") {
@@ -91,24 +94,26 @@ function shape(piece: Piece, active: boolean) {
     const stroke=active?"#71360f":"#57534e";
     const c=piece.color;
     return <g key={i} stroke={stroke} strokeWidth={active?2:1} strokeLinejoin="round">
-      <polygon fill={c} points={[project(a,front,base),project(right,front,base),project(right,front,top),project(a,front,top)].join(" ")}/>
-      <polygon fill={c} fillOpacity=".76" points={[project(right,b,base),project(right,front,base),project(right,front,top),project(right,b,top)].join(" ")}/>
-      <polygon fill={c} stroke={stroke} points={[project(a,b,top),project(right,b,top),project(right,front,top),project(a,front,top)].join(" ")}/>
+      <polygon fill={c} points={[projectPoint(a,front,base),projectPoint(right,front,base),projectPoint(right,front,top),projectPoint(a,front,top)].join(" ")}/>
+      <polygon fill={c} fillOpacity=".76" points={[projectPoint(right,b,base),projectPoint(right,front,base),projectPoint(right,front,top),projectPoint(right,b,top)].join(" ")}/>
+      <polygon fill={c} stroke={stroke} points={[projectPoint(a,b,top),projectPoint(right,b,top),projectPoint(right,front,top),projectPoint(a,front,top)].join(" ")}/>
     </g>;
   });
 }
 
-function readLayout(key: string, catalog: Record<string, Item>) {
+function readLayout(key: string, catalog: Record<string, Item>, maxSize: number) {
   try {
     const saved = JSON.parse(localStorage.getItem(key) ?? "null");
     if (!saved || !Array.isArray(saved.pieces) || !Array.isArray(saved.lines)) return null;
     return {
+      footprint: validFootprint(saved.footprint) ? saved.footprint as Footprint : undefined,
+      notes: typeof saved.notes === "string" ? saved.notes.slice(0, 1500) : "",
       pieces: saved.pieces.slice(0,80).filter((p: Piece) => p && Object.hasOwn(catalog,p.kind) &&
         typeof p.id==="string" && /^#[0-9a-f]{6}$/i.test(p.color) &&
-        [p.x,p.y,p.w,p.d,p.h,p.elevation ?? 0].every(v=>Number.isFinite(v) && v>=0 && v<=grid)),
+        [p.x,p.y,p.w,p.d,p.h,p.elevation ?? 0].every(v=>Number.isFinite(v) && v>=0 && v<=maxSize)),
       lines: saved.lines.slice(0,50).filter((line: Point[])=>Array.isArray(line) && line.length<=200 &&
         line.every(p=>p && Number.isFinite(p.x) && Number.isFinite(p.y))),
-    } as {pieces: Piece[]; lines: Point[][]};
+    } as {pieces: Piece[]; lines: Point[][]; footprint?: Footprint; notes: string};
   } catch {return null}
 }
 
@@ -121,16 +126,59 @@ function seedInteriorPieces(): Piece[] {
   ];
 }
 
-export function LayoutEditor({mode, preview, onPlans}: {mode: Mode; preview: boolean; onPlans: () => void}) {
+function validFootprint(value: Partial<Footprint> | null | undefined): value is Footprint {
+  return !!value && [value.width, value.depth].every(n => typeof n === "number" && Number.isFinite(n) && n >= 3 && n <= 100);
+}
+
+const plannerCatalog: Record<string, Item> = {...structure, ...furniture, ...PLANNER_ITEMS};
+
+export function SpacePlanner({onPlans}: {onPlans: () => void}) {
+  const [space, setSpace] = useState<SpaceType>("house");
+  return <section className="mx-auto max-w-7xl px-4 pb-20 pt-6">
+    <h1 className="font-display text-3xl font-semibold">Space Planner</h1>
+    <p className="mt-2 text-sm text-stone-700">Set your footprint, arrange rooms or work zones, and review the same layout in 2D and isometric views.</p>
+    <div className="mt-4 flex flex-wrap gap-2" aria-label="Space type">
+      {(Object.keys(SPACE_TYPES) as SpaceType[]).map(type => (
+        <button key={type} type="button" aria-pressed={type === space} onClick={() => setSpace(type)}
+          className="min-h-11 rounded-lg border border-stone-300 bg-white px-4 text-sm font-semibold aria-pressed:border-amber-800 aria-pressed:bg-amber-100">
+          {SPACE_TYPES[type].label}
+        </button>
+      ))}
+    </div>
+    <LayoutEditor key={space} mode="planner" space={space} preview onPlans={onPlans} />
+  </section>;
+}
+
+export function LayoutEditor({mode, preview, onPlans, space = "house"}: {mode: Mode; preview: boolean; onPlans: () => void; space?: SpaceType}) {
   const casting=mode==="casting";
-  const catalog=casting?structure:furniture;
-  const key="sparklintel-layout-"+mode;
-  const [initial]=useState(()=>readLayout(key,catalog));
-  const [pieces,setPieces]=useState<Piece[]>(()=>initial?.pieces && initial.pieces.length > 0 ? initial.pieces : (casting?templates("wall"):seedInteriorPieces()));
+  const planning = mode === "planner";
+  const config = SPACE_TYPES[space];
+  const catalog = planning ? plannerCatalog : casting ? structure : furniture;
+  const key = "sparklintel-layout-" + (planning ? space : mode);
+  const [initial] = useState(() => readLayout(key, catalog, planning ? 100 : grid));
+  const [footprint, setFootprint] = useState<Footprint>(() => initial?.footprint ??
+    (planning ? {width: config.size[0], depth: config.size[1]} : {width: grid, depth: grid}));
+  const [notes, setNotes] = useState(initial?.notes ?? "");
+  const [pieces,setPieces]=useState<Piece[]>(() => initial?.pieces ??
+    (planning ? config.layout.map(([kind,x,y]) => ({...makePiece(catalog,kind,0,0),x,y}))
+      : casting ? templates("wall") : seedInteriorPieces()));
+  const {width, depth} = footprint;
+  const limitHeight = planning ? 20 : maxHeight;
+  const scale2d = Math.min(300 / width, 270 / depth);
+  const sx = planning ? scale2d : 30;
+  const sy = planning ? scale2d : 27;
+  const left = (420 - width * sx) / 2;
+  const top = (310 - depth * sy) / 2;
+  const scale3d = planning ? Math.min(1, 20 / (width + depth)) : 1;
+  const isoX = 210 - (width - depth) * 8 * scale3d;
+  const isoY = planning ? 196 - (width + depth) * 4 * scale3d : 108;
+  const projectPoint: typeof project = planning
+    ? (x,y,z=0) => [isoX + (x-y)*16*scale3d, isoY + ((x+y)*8-z*22)*scale3d].join(",")
+    : project;
   const [lines,setLines]=useState<Point[][]>(()=>initial?.lines ?? []);
   const [tool,setTool]=useState<"move" | "pencil">("move");
   const [view,setView]=useState<"plan" | "3d">("plan");
-  const [kind,setKind]=useState(Object.keys(catalog)[0]);
+  const [kind,setKind]=useState<string>(planning ? config.items[0] : Object.keys(catalog)[0]);
   const [selected,setSelected]=useState("");
   const [storageFailed,setStorageFailed]=useState(false);
   const [confirmClear,setConfirmClear]=useState(false);
@@ -142,15 +190,15 @@ export function LayoutEditor({mode, preview, onPlans}: {mode: Mode; preview: boo
   const item=pieces.find(p=>p.id===selected);
   useEffect(()=>{
     if(!preview)return;
-    try {localStorage.setItem(key,JSON.stringify({pieces,lines}))} catch {setStorageFailed(true)}
-  },[key,lines,pieces,preview]);
+    try {localStorage.setItem(key,JSON.stringify({pieces,lines,footprint,notes}))} catch {setStorageFailed(true)}
+  },[key,lines,pieces,preview,footprint,notes]);
 
   function point(event: PointerEvent): Point | null {
     const svg=stage.current, matrix=svg?.getScreenCTM();
     if(!svg || !matrix)return null;
     const p=new DOMPoint(event.clientX,event.clientY).matrixTransform(matrix.inverse());
-    if(view==="plan")return {x:(p.x-60)/30,y:(p.y-20)/27};
-    const a=(p.x-210)/16,b=(p.y-108)/8;
+    if(view==="plan")return {x:(p.x-left)/sx,y:(p.y-top)/sy};
+    const a=(p.x-isoX)/(16*scale3d),b=(p.y-isoY)/(8*scale3d);
     return {x:(b+a)/2,y:(b-a)/2};
   }
   function begin(event: PointerEvent, piece?: Piece) {
@@ -166,14 +214,26 @@ export function LayoutEditor({mode, preview, onPlans}: {mode: Mode; preview: boo
       // Ignore environments where SVG pointer capture throws
     }
     if(tool==="move" && piece)setSelected(piece.id);
-    else setLines(previous=>[...previous,[{x:limit(at.x),y:limit(at.y)}]]);
+    else setLines(previous=>[...previous,[{x:limit(at.x,width),y:limit(at.y,depth)}]]);
   }
   function updatePiece(id: string, patch: Partial<Piece>) {
     setPieces(previous=>previous.map(p=>{
       if(p.id!==id)return p;
       const next={...p,...patch};
-      return {...next,x:limit(next.x,grid-next.w),y:limit(next.y,grid-next.d),elevation:limit(next.elevation ?? 0,maxHeight-next.h)};
+      return {...next,x:limit(next.x,width-next.w),y:limit(next.y,depth-next.d),elevation:limit(next.elevation ?? 0,limitHeight-next.h)};
     }));
+  }
+  function resizeFootprint(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const values = new FormData(event.currentTarget);
+    const next = {width: Number(values.get("width")), depth: Number(values.get("depth"))};
+    if (!validFootprint(next)) return;
+    setFootprint(next);
+    setPieces(previous => previous.map(piece => {
+      const w = Math.min(piece.w, next.width), d = Math.min(piece.d, next.depth);
+      return {...piece, w, d, x: limit(piece.x, next.width - w), y: limit(piece.y, next.depth - d)};
+    }));
+    setLines(previous => previous.map(line => line.map(p => ({x: limit(p.x,next.width),y: limit(p.y,next.depth)}))));
   }
   function move(event: PointerEvent) {
     const active=gesture.current, at=point(event);
@@ -185,15 +245,15 @@ export function LayoutEditor({mode, preview, onPlans}: {mode: Mode; preview: boo
       setLines(previous=>{
         const last=previous.at(-1);
         if(!last || last.length>=200)return previous;
-        return [...previous.slice(0,-1),[...last,{x:limit(at.x),y:limit(at.y)}]];
+        return [...previous.slice(0,-1),[...last,{x:limit(at.x,width),y:limit(at.y,depth)}]];
       });
     }
   }
   const button="min-h-11 rounded-lg border border-stone-300 bg-white px-3 text-sm font-medium text-stone-900 aria-pressed:border-amber-800 aria-pressed:bg-amber-100 disabled:opacity-50";
   return <details open className="mx-auto mt-5 w-[calc(100%-2rem)] max-w-7xl rounded-2xl border border-stone-200 bg-[#fbf9f4]">
-    <summary className="cursor-pointer px-5 py-4 font-semibold">{casting?"Draw & Move 3D Casting Walls, Columns & Structures (Pencil + Move)":"Pencil Sketch & Move Sophia Key / George Furniture Floor Plan"}</summary>
+    <summary className="cursor-pointer px-5 py-4 font-semibold">{planning ? config.label + " layout" : casting?"Draw & Move 3D Casting Walls, Columns & Structures (Pencil + Move)":"Pencil Sketch & Move Sophia Key / George Furniture Floor Plan"}</summary>
     <div className="space-y-4 border-t border-stone-200 p-4 sm:p-5">
-      {!casting && preview && <section aria-labelledby="shop-vendors" className="space-y-3">
+      {!casting && !planning && preview && <section aria-labelledby="shop-vendors" className="space-y-3">
         <h2 id="shop-vendors" className="text-lg font-semibold">Shop furniture directly from suppliers</h2>
         <p className="text-sm text-stone-700">Order and pay on the vendor’s site or through its sales team. For delivery damage, missing items, returns or warranty claims, contact the seller on your order.</p>
         <details className="rounded-xl border border-stone-200 bg-white px-4 py-3">
@@ -206,12 +266,18 @@ export function LayoutEditor({mode, preview, onPlans}: {mode: Mode; preview: boo
           {vendor.inquiry && <a href={vendor.inquiry} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center self-start text-sm font-semibold text-amber-900 underline">Contact Sophiakey for sourcing ↗</a>}
         </article>)}</div>
       </section>}
-      {!casting && !preview && (
+      {!casting && !planning && !preview && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-2.5 text-xs text-stone-800">
           <span>Draw freely with the <strong>Pencil</strong> or drag furniture below. Subscribe to Pro/Studio to save layouts and unlock full vendor store ordering.</span>
           <button type="button" className="rounded-lg bg-stone-900 px-3 py-1.5 font-semibold text-white cursor-pointer" onClick={onPlans}>View Subscriptions</button>
         </div>
       )}
+        {planning && <form onSubmit={resizeFootprint} className="flex flex-wrap items-end gap-3">
+          <label className="flex flex-col gap-1 text-sm">Footprint width (m)<input className={button+" w-28"} name="width" type="number" min="3" max="100" step=".1" defaultValue={width} required /></label>
+          <label className="flex flex-col gap-1 text-sm">Footprint depth (m)<input className={button+" w-28"} name="depth" type="number" min="3" max="100" step=".1" defaultValue={depth} required /></label>
+          <button className={button} type="submit">Apply dimensions</button>
+          <output className="self-center text-sm">{width} × {depth} m · {+(width*depth).toFixed(2)} m²</output>
+        </form>}
         <div className="flex flex-wrap gap-2">
           {casting && <><label className="flex items-center gap-2 text-sm">Starting layout<select className={button} value={template} onChange={e=>setTemplate(e.target.value)}>
             <option value="wall">Walls and openings</option><option value="frame">Column and beam frame</option><option value="shell">Slabs and stairs</option><option value="blank">Blank layout</option>
@@ -225,11 +291,16 @@ export function LayoutEditor({mode, preview, onPlans}: {mode: Mode; preview: boo
               <button className={button} type="button" onClick={()=>setConfirmClear(false)}>Cancel</button>
             </span>
           )}
-          <label className="flex items-center gap-2 text-sm">{casting?"Element":"Furniture"}<select className={button} value={kind} onChange={e=>setKind(e.target.value)}>{Object.entries(catalog).map(([id,p])=><option value={id} key={id}>{p.label}</option>)}</select></label>
+          <label className="flex items-center gap-2 text-sm">{casting || planning ? "Element" : "Furniture"}<select className={button} value={kind} onChange={e=>setKind(e.target.value)}>{Object.entries(catalog).filter(([id])=>!planning || (config.items as readonly string[]).includes(id) || Object.hasOwn(furniture,id)).map(([id,p])=><option value={id} key={id}>{p.label}</option>)}</select></label>
           <button className={button} type="button" disabled={pieces.length>=80} onClick={()=>{
             const link=casting?"":supplierLink(source.trim());
             if(!casting && source.trim() && !link){setSourceError(true);return;}
             const p=makePiece(catalog,kind,4+pieces.length%4*.4,4);
+            if (planning) {
+              p.w = Math.min(p.w, width); p.d = Math.min(p.d, depth);
+              p.x = limit(width / 2 - p.w / 2, width - p.w);
+              p.y = limit(depth / 2 - p.d / 2, depth - p.d);
+            }
             if(link)p.source=link;
             setPieces(previous=>[...previous,p]);setSelected(p.id);setTool("move");setSource("");setSourceError(false);
           }}>Add to canvas</button>
@@ -250,40 +321,45 @@ export function LayoutEditor({mode, preview, onPlans}: {mode: Mode; preview: boo
         <p className="text-sm text-stone-700">{tool==="pencil"?"Pencil active: draw walls, rugs, or paths with your mouse, finger, or stylus (works in both 2D and 3D views).":"Move active: drag any furniture/structure item with a mouse or finger, or select it and use the arrows below."}</p>
         <svg ref={stage} aria-label={view==="plan"?"Editable floor plan":"Editable 3D layout"} role="img" viewBox="0 0 420 310" className="mx-auto block w-full max-w-[660px] rounded-xl border border-stone-300 bg-[#f1ece2]" style={{touchAction:"none",cursor:tool==="pencil"?"crosshair":"grab"}} onPointerDown={event=>begin(event)} onPointerMove={move} onPointerUp={()=>{gesture.current=null}} onPointerCancel={()=>{gesture.current=null}} onLostPointerCapture={()=>{gesture.current=null}}>
           {view==="plan"? <>
-            <rect x="60" y="20" width="300" height="270" fill="#fcfaf3" stroke="#8c8274"/>
-            {Array.from({length:9},(_,i)=><path key={i} d={`M${90+i*30} 20v270 M60 ${47+i*27}h300`} fill="none" stroke="#ded6c9"/>)}
+            <rect x={left} y={top} width={width*sx} height={depth*sy} fill="#fcfaf3" stroke="#8c8274"/>
+            {Array.from({length:9},(_,i)=><path key={i} d={`M${left+(i+1)*width*sx/10} ${top}v${depth*sy} M${left} ${top+(i+1)*depth*sy/10}h${width*sx}`} fill="none" stroke="#ded6c9"/>)}
             {pieces.map(p=><g key={p.id} style={{touchAction:"none"}} onPointerDown={event=>{if(tool==="move"){event.stopPropagation();begin(event,p);}}}>
-              <rect x={60+p.x*30} y={20+p.y*27} width={p.w*30} height={p.d*27} rx="2" fill={p.color} stroke={selected===p.id?"#703908":"#4e463e"} strokeWidth={selected===p.id?3:1}/>
-              {p.w>=1.1 && p.d>=.45 && <text x={64+p.x*30} y={32+p.y*27} fontSize="8.5" fill="#17130f" pointerEvents="none">{catalog[p.kind].label}</text>}
+              <rect x={left+p.x*sx} y={top+p.y*sy} width={p.w*sx} height={p.d*sy} rx="2" fill={p.color} stroke={selected===p.id?"#703908":"#4e463e"} strokeWidth={selected===p.id?3:1}/>
+              {p.w*sx>=33 && p.d*sy>=12 && <text x={left+4+p.x*sx} y={top+12+p.y*sy} fontSize="8.5" fill="#17130f" pointerEvents="none">{catalog[p.kind].label}</text>}
             </g>)}
-            {lines.map((line,index)=><polyline key={index} points={line.map(p=>[60+p.x*30,20+p.y*27].join(",")).join(" ")} fill="none" stroke="#92400E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" pointerEvents="none"/>)}
+            {lines.map((line,index)=><polyline key={index} points={line.map(p=>[left+p.x*sx,top+p.y*sy].join(",")).join(" ")} fill="none" stroke="#92400E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" pointerEvents="none"/>)}
           </> : <>
-            <polygon points={[project(0,0),project(grid,0),project(grid,grid),project(0,grid)].join(" ")} fill="#f8f4eb" stroke="#8c8274"/>
+            <polygon points={[projectPoint(0,0),projectPoint(width,0),projectPoint(width,depth),projectPoint(0,depth)].join(" ")} fill="#f8f4eb" stroke="#8c8274"/>
             {Array.from({length:9},(_,i)=><g key={i} opacity=".45" stroke="#b9afa2">
-              <polyline points={project(i+1,0)+" "+project(i+1,grid)}/><polyline points={project(0,i+1)+" "+project(grid,i+1)}/>
+              <polyline points={projectPoint((i+1)*width/10,0)+" "+projectPoint((i+1)*width/10,depth)}/><polyline points={projectPoint(0,(i+1)*depth/10)+" "+projectPoint(width,(i+1)*depth/10)}/>
             </g>)}
-            {[...pieces].sort((a,b)=>a.x+a.y-b.x-b.y).map(p=><g key={p.id} style={{touchAction:"none"}} onPointerDown={event=>{if(tool==="move"){event.stopPropagation();begin(event,p);}}}>{shape(p,p.id===selected)}</g>)}
-            {lines.map((line,index)=><polyline key={"3d-line-"+index} points={line.map(p=>project(p.x,p.y,0)).join(" ")} fill="none" stroke="#92400E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" pointerEvents="none"/>)}
+            {[...pieces].sort((a,b)=>a.x+a.y-b.x-b.y).map(p=><g key={p.id} style={{touchAction:"none"}} onPointerDown={event=>{if(tool==="move"){event.stopPropagation();begin(event,p);}}}>{shape(p,p.id===selected,projectPoint)}</g>)}
+            {lines.map((line,index)=><polyline key={"3d-line-"+index} points={line.map(p=>projectPoint(p.x,p.y,0)).join(" ")} fill="none" stroke="#92400E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" pointerEvents="none"/>)}
           </>}
         </svg>
         <div className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2 text-sm">Selected object<select className={button} value={selected} onChange={e=>setSelected(e.target.value)}><option value="">Select an object</option>{pieces.map((p,index)=><option key={p.id} value={p.id}>{catalog[p.kind].label} {index+1}</option>)}</select></label>
           {item && <>
             {([[-1,0,"←","Move left"],[1,0,"→","Move right"],[0,-1,"↑","Move back"],[0,1,"↓","Move forward"]] as const).map(([dx,dy,icon,label])=><button className={button} type="button" key={label} aria-label={label} onClick={()=>updatePiece(item.id,{x:item.x+dx*.2,y:item.y+dy*.2})}>{icon}</button>)}
-            <button className={button} type="button" onClick={()=>updatePiece(item.id,{w:item.d,d:item.w})}>Rotate footprint</button>
+            <button className={button} type="button" disabled={item.d > width || item.w > depth} onClick={()=>updatePiece(item.id,{w:item.d,d:item.w})}>Rotate footprint</button>
             <button className={button} type="button" onClick={()=>{setPieces(previous=>previous.filter(p=>p.id!==item.id));setSelected("");}}>Remove</button>
           </>}
         </div>
         {item && <div className="flex flex-wrap gap-3">
-          {([["w","Width"],["d","Depth"],["h","Height"]] as const).map(([field,label])=><label className="flex flex-col gap-1 text-sm" key={item.id+field}>{label} (m)<input className={button+" w-24"} type="number" min=".1" max={field==="h"?maxHeight:grid} step=".01" value={item[field]} onChange={e=>{const n=e.target.valueAsNumber;if(n>=.1&&n<=(field==="h"?maxHeight:grid))updatePiece(item.id,{[field]:n});}}/></label>)}
-          <label className="flex flex-col gap-1 text-sm">Elevation (m)<input className={button+" w-24"} type="number" min="0" max={maxHeight-item.h} step=".01" value={item.elevation ?? 0}
-            onChange={event=>{const elevation=event.target.valueAsNumber;if(elevation>=0&&elevation<=maxHeight-item.h)updatePiece(item.id,{elevation});}}/></label>
+          {([["w","Width"],["d","Depth"],["h","Height"]] as const).map(([field,label])=><label className="flex flex-col gap-1 text-sm" key={item.id+field}>{label} (m)<input className={button+" w-24"} type="number" min=".1" max={field==="h"?limitHeight:field==="w"?width:depth} step=".01" value={item[field]} onChange={e=>{const n=e.target.valueAsNumber;if(n>=.1&&n<=(field==="h"?limitHeight:field==="w"?width:depth))updatePiece(item.id,{[field]:n});}}/></label>)}
+          <label className="flex flex-col gap-1 text-sm">Elevation (m)<input className={button+" w-24"} type="number" min="0" max={limitHeight-item.h} step=".01" value={item.elevation ?? 0}
+            onChange={event=>{const elevation=event.target.valueAsNumber;if(elevation>=0&&elevation<=limitHeight-item.h)updatePiece(item.id,{elevation});}}/></label>
           <label className="flex flex-col gap-1 text-sm">Finish<select className={button} value={item.color} onChange={e=>updatePiece(item.id,{color:e.target.value})}>
             <option value={catalog[item.kind].color}>Original</option>{finish.filter(c=>c!==catalog[item.kind].color).map((c,i)=><option key={c} value={c}>{["Concrete gray","Sand","Slate","Clay"][finish.indexOf(c)] ?? i}</option>)}
           </select></label>
         </div>}
         {item?.source && supplierLink(item.source) && <a href={supplierLink(item.source)} target="_blank" rel="noopener noreferrer" className="inline-block py-2 text-sm font-medium text-amber-900 underline">View this item at the vendor ↗</a>}
-        <p className="text-xs text-stone-600">{casting?"Concept geometry for layout discussion. A qualified local engineer must validate structural designs. ":"Supplier models use approximate shapes. "}{storageFailed?"This browser could not save the layout.":preview?"This layout saves in this browser.":"Select a plan preview to keep your layout in this browser."}</p>
+        {planning && <label className="block text-sm">Project notes
+          <textarea className="mt-1 block w-full rounded-lg border border-stone-300 bg-white p-3" rows={3} maxLength={1500}
+            placeholder="What should the layout accomplish? Note priorities or changes to discuss with your designer."
+            value={notes} onChange={e => setNotes(e.target.value)} />
+        </label>}
+        <p className="text-xs text-stone-600">{planning ? "Concept layout. Have a qualified local professional review it before construction or installation. " : casting?"Concept geometry for layout discussion. A qualified local engineer must validate structural designs. ":"Supplier models use approximate shapes. "}{storageFailed?"This browser could not save the layout.":preview?"This layout saves in this browser.":"Select a plan preview to keep your layout in this browser."}</p>
     </div>
   </details>;
 }

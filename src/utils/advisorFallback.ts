@@ -28,6 +28,10 @@ export function generateLocalAdvisorReply(
 ): string {
   const q = question.trim().toLowerCase();
 
+  if (/\b(?:space planner|warehouses?|business space|office layout|retail layout|design (?:my|a) (?:own )?house|nolli)\b/.test(q)) {
+    return "Open Space Planner and choose House, Business space, or Warehouse. Apply the footprint dimensions, place and resize elements, then switch between 2D Floor Plan and 3D Isometric. Add project notes to record the changes you want. Each layout saves in this browser.";
+  }
+
   if (/\b(?:refunds?|returns?|warrant(?:y|ies)|damag(?:e|ed)|ships?|shipping|delivery|customs)\b/.test(q)) {
     return "Check the seller’s product listing or contact the seller to confirm delivery, customs, returns and warranty terms. For an existing order, contact the seller directly with your order number and photos of any damage.";
   }

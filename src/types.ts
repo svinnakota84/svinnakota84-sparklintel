@@ -1,4 +1,4 @@
-export type AppTab = "studio" | "plans" | "casting" | "advisor" | "pricing";
+export type AppTab = "studio" | "plans" | "casting" | "advisor" | "pricing" | "planner";
 
 export type BuildingSector = "residential" | "commercial";
 
