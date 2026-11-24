@@ -185,6 +185,7 @@ export interface PlaceableFurnitureSpec {
   vendorUrl: string;
   vendorLabel: string;
   shape: PlaceableFurnitureShape;
+  modelSizeM?: { width: number; depth: number; height: number };
   dimensions: string;
   materialNote: string;
   primaryHex: string;
@@ -203,6 +204,7 @@ export interface PlacedFurnitureInstance {
   vendorUrl?: string;
   vendorLabel?: string;
   shape: PlaceableFurnitureShape;
+  modelSizeM?: { width: number; depth: number; height: number };
   primaryHex: string;
   accentHex: string;
   isWood?: boolean;

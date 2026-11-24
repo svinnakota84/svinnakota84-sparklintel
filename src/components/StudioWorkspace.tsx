@@ -53,6 +53,9 @@ import {
 } from "../types";
 import { KitchenFurniture3DViewer } from "./KitchenFurniture3DViewer";
 
+import { DESIGN_REFERENCES } from "../data/designReferences";
+import { VendorFurnitureForm } from "./VendorFurnitureForm";
+
 type DockTab = "combos" | "custom" | "furniture" | "camera";
 
 interface StudioWorkspaceProps {
@@ -131,6 +134,9 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
   onOpenVendorLegal,
   requestedDockTab,
 }) => {
+  const viewerRef = useRef<HTMLDivElement>(null);
+  const vendorFormRef = useRef<HTMLDivElement>(null);
+  const [selectedVendor, setSelectedVendor] = useState<{ title: string; url: string } | null>(null);
   const [dockExpanded, setDockExpanded] = useState(true);
   const [dockTab, setDockTab] = useState<DockTab>("combos");
   const [customSlot, setCustomSlot] = useState<InteriorDropZone>("lower");
@@ -164,6 +170,13 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
   } | null>(null);
   const touchDraggingFurnitureRef = useRef<PlaceableFurnitureSpec | null>(null);
   const ignoreNextClickRef = useRef(false);
+
+  useEffect(() => {
+    if (selectedVendor) {
+      vendorFormRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      vendorFormRef.current?.focus({ preventScroll: true });
+    }
+  }, [selectedVendor]);
 
   useEffect(() => {
     if (requestedDockTab) {
@@ -375,7 +388,7 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
   return (
     <div className="pb-20 md:pb-12">
       {/* Interactive 3D Stage */}
-      <div className="relative w-full h-[64dvh] min-h-[450px] md:h-[78dvh] bg-[#EFECE5] overflow-hidden border-b border-black/8">
+      <div ref={viewerRef} className="relative w-full h-[64dvh] min-h-[450px] md:h-[78dvh] bg-[#EFECE5] overflow-hidden border-b border-black/8">
         <KitchenFurniture3DViewer
           layout={layout}
           doorStyle={doorStyle}
@@ -987,6 +1000,9 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
 
                 {dockTab === "furniture" && (
                   <div className="space-y-3">
+                    <a href="#vendor-storefronts-heading" className="inline-flex text-xs font-semibold text-[#92400E] underline">
+                      Browse vendor furniture
+                    </a>
                     {/* Add, Tap-Floor Place & Drag Designer Collection (Sophia Key & George Buildings) */}
                     <div>
                       <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
@@ -1709,6 +1725,22 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
           </div>
         </section>
 
+        <section aria-labelledby="design-inspiration-heading" className="bg-white rounded-2xl border border-black/10 p-5 sm:p-6">
+          <h2 id="design-inspiration-heading" className="text-xl font-semibold">Design Inspiration</h2>
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
+            {DESIGN_REFERENCES.map((reference) => (
+              <article key={reference.name} className="rounded-xl border border-black/10 bg-[#FAF9F6] p-4">
+                <h3 className="font-semibold">{reference.title}</h3>
+                <p className="mt-2 text-sm text-[#57534E]">{reference.description}</p>
+                <a className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#92400E] underline"
+                  href={reference.url} target="_blank" rel="noopener noreferrer">
+                  {reference.name}<ExternalLink className="size-3" aria-hidden="true" />
+                </a>
+              </article>
+            ))}
+          </div>
+        </section>
+
         {/* Direct Vendor Storefronts + Bilateral Legal Shield */}
         <section
           aria-labelledby="vendor-storefronts-heading"
@@ -1723,11 +1755,11 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
                 id="vendor-storefronts-heading"
                 className="font-display text-xl sm:text-2xl font-semibold text-[#141517] mt-0.5"
               >
-                Shop Furniture Directly From George Buildings &amp; Sophia Key
+                Vendor Furniture
               </h2>
               <p className="text-xs sm:text-sm text-[#57534E] mt-1 max-w-2xl">
                 Preview and drag pieces into your 3D room above, then visit the
-                partner vendor&apos;s own storefront below to place or request
+                vendor&apos;s storefront below to browse listings and place or request
                 physical furniture orders directly with the seller.
               </p>
             </div>
@@ -1793,6 +1825,10 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
                     >
                       {vendor.cta}
                     </a>
+                    <button type="button" onClick={() => setSelectedVendor(vendor)}
+                      className="min-h-[38px] px-3.5 py-2 rounded-lg border border-black/15 bg-white text-xs font-semibold text-[#141517] hover:border-[#B45309]">
+                      Add product to room
+                    </button>
                     {vendor.secondaryUrl && (
                       <a
                         href={vendor.secondaryUrl}
@@ -1819,6 +1855,18 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
               </div>
             ))}
           </div>
+
+          {isSubscribed && selectedVendor && (
+            <div ref={vendorFormRef} tabIndex={-1}>
+              <VendorFurnitureForm key={selectedVendor.url} vendor={selectedVendor} onPlace={(item) => {
+                setSelectedVendor(null);
+                setPlacingFurniture(item);
+                setInteractionMode("move");
+                setDockTab("furniture");
+                viewerRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+              }} />
+            </div>
+          )}
 
           <div className="rounded-xl bg-[#FAF7F2] border border-[#B45309]/25 p-3.5 flex items-start gap-3 text-xs text-[#57534E] leading-relaxed">
             <ShieldCheck className="w-4 h-4 text-[#B45309] shrink-0 mt-0.5" />

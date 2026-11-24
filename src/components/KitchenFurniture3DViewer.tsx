@@ -456,6 +456,18 @@ function buildPlacedFurnitureMesh(
     tagMesh(canopyB);
   }
 
+  if (item.modelSizeM) {
+    const model = new THREE.Group();
+    model.add(...grp.children.slice());
+    const bounds = new THREE.Box3().setFromObject(model);
+    const size = bounds.getSize(new THREE.Vector3());
+    const center = bounds.getCenter(new THREE.Vector3());
+    const { width, depth, height } = item.modelSizeM;
+    model.scale.set(width / size.x, height / size.y, depth / size.z);
+    model.position.set(-center.x * model.scale.x, -bounds.min.y * model.scale.y, -center.z * model.scale.z);
+    grp.add(model);
+  }
+
   // Generous invisible touch/mouse grab disc at floor level so small furniture items are effortless to drag
   const grabDisc = new THREE.Mesh(
     new THREE.CircleGeometry(0.95, 24),

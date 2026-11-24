@@ -32,11 +32,13 @@ interface CustomerAIAgentDrawerProps {
   onOpenFullAdvisor: () => void;
 }
 
+const isStaticAdvisor = import.meta.env.VITE_STATIC_ADVISOR === "true";
+
 const QUICK_CUSTOMER_PROMPTS = [
-  "Can you cast a multi-story commercial building or custom villa?",
-  "Which Vastu facing & cabinet colors fit my Rashi?",
+  "How do I add Sophia Key furniture to my room?",
+  "Where can I find architecture inspiration?",
   "How do custom quotes & subscriptions work?",
-  "What is the difference between GFRC arches & waffle slabs?",
+  "How can I use REEKON measurements in the studio?",
 ];
 
 export const CustomerAIAgentDrawer: React.FC<CustomerAIAgentDrawerProps> = ({
@@ -59,7 +61,7 @@ export const CustomerAIAgentDrawer: React.FC<CustomerAIAgentDrawerProps> = ({
       id: "agent-welcome",
       role: "assistant",
       content:
-        "Hello! I'm the Spark&Lintel AI Customer Agent — ask me anything about 3D kitchen cabinets, custom house construction, residential/commercial building casting, Vastu & Astrology, or pricing negotiation.",
+        "Ask about your house plan, kitchen finishes, vendor furniture, casting, design inspiration, Vastu or subscriptions.",
       timestamp: "Live",
     },
   ]);
@@ -111,6 +113,7 @@ export const CustomerAIAgentDrawer: React.FC<CustomerAIAgentDrawerProps> = ({
     };
 
     try {
+      if (isStaticAdvisor) throw new Error("STATIC_MODE");
       const response = await fetch("/api/advisor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -149,6 +152,9 @@ export const CustomerAIAgentDrawer: React.FC<CustomerAIAgentDrawerProps> = ({
       }, 60);
     } catch {
       const fallbackReply = generateLocalAdvisorReply(trimmed, contextPayload);
+      setErrorMsg(isStaticAdvisor
+        ? "Studio Help uses built-in guidance."
+        : "The AI service is unavailable. Showing built-in Studio Help.");
       setMessages((prev) => [
         ...prev,
         {
@@ -175,11 +181,11 @@ export const CustomerAIAgentDrawer: React.FC<CustomerAIAgentDrawerProps> = ({
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          aria-label="Ask Spark&Lintel AI Agent"
+          aria-label={isStaticAdvisor ? "Open Studio Help" : "Ask Spark&Lintel AI Agent"}
           className="fixed bottom-[68px] right-3 sm:bottom-6 sm:right-6 z-30 min-h-[44px] px-4 py-2.5 rounded-xl bg-[#141517] text-white text-xs font-semibold shadow-xl border border-white/15 hover:bg-[#292B2F] transition-colors inline-flex items-center gap-2 cursor-pointer"
         >
           <MessageSquare className="w-4 h-4 text-[#F59E0B] shrink-0" />
-          <span>Ask AI Agent</span>
+          <span>{isStaticAdvisor ? "Studio Help" : "Ask AI Agent"}</span>
         </button>
       )}
 
@@ -187,14 +193,14 @@ export const CustomerAIAgentDrawer: React.FC<CustomerAIAgentDrawerProps> = ({
       {open && (
         <div
           role="dialog"
-          aria-label="Spark&Lintel AI Customer Agent"
+          aria-label={isStaticAdvisor ? "Spark&Lintel Studio Help" : "Spark&Lintel AI Customer Agent"}
           className="fixed bottom-[64px] right-3 left-3 sm:left-auto sm:bottom-6 sm:right-6 sm:w-[410px] h-[72dvh] sm:h-[560px] z-50 bg-white rounded-2xl border border-black/15 shadow-2xl flex flex-col overflow-hidden"
         >
           <div className="px-4 py-3 bg-[#141517] text-white flex items-center justify-between gap-3 shrink-0">
             <div className="min-w-0">
               <p className="text-[11px] font-mono text-[#F59E0B] flex items-center gap-1.5">
                 <Sparkles className="w-3 h-3 shrink-0" />
-                <span>Spark&amp;Lintel Customer AI Agent</span>
+                <span>{isStaticAdvisor ? "SparkLintel Studio Help" : "Spark&Lintel Customer AI Agent"}</span>
               </p>
               <p className="text-xs font-semibold truncate">
                 Interiors · Casting · Vastu &amp; Quotes

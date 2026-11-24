@@ -7,6 +7,11 @@ import {defineConfig} from 'vite';
 export default defineConfig(() => {
   return {
     base: './',
+    define: {
+      'import.meta.env.VITE_STATIC_ADVISOR': JSON.stringify(
+        process.env.VITE_STATIC_ADVISOR ?? String(process.env.GITHUB_ACTIONS === 'true')
+      ),
+    },
     plugins: [
       react(),
       tailwindcss(),

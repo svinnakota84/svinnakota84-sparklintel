@@ -153,6 +153,7 @@ export const VastuAstrologyAdvisor: React.FC<VastuAstrologyAdvisorProps> = ({
     };
 
     try {
+      if (import.meta.env.VITE_STATIC_ADVISOR === "true") throw new Error("STATIC_MODE");
       const response = await fetch("/api/advisor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -190,6 +191,9 @@ export const VastuAstrologyAdvisor: React.FC<VastuAstrologyAdvisorProps> = ({
       }, 60);
     } catch {
       const fallbackReply = generateLocalAdvisorReply(trimmed, contextPayload);
+      setErrorMsg(import.meta.env.VITE_STATIC_ADVISOR === "true"
+        ? "Studio Help uses built-in guidance."
+        : "The AI service is unavailable. Showing built-in Studio Help.");
       const aiMsg: AdvisorMessage = {
         id: `a-${Date.now()}`,
         role: "assistant",
