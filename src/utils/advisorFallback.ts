@@ -28,7 +28,7 @@ export function generateLocalAdvisorReply(
 ): string {
   const q = question.trim().toLowerCase();
 
-  if (/\b(?:refunds?|returns?|warrant(?:y|ies)|damag(?:e|ed)|shipping|delivery|customs)\b/.test(q)) {
+  if (/\b(?:refunds?|returns?|warrant(?:y|ies)|damag(?:e|ed)|ships?|shipping|delivery|customs)\b/.test(q)) {
     return "Check the seller’s product listing or contact the seller to confirm delivery, customs, returns and warranty terms. For an existing order, contact the seller directly with your order number and photos of any damage.";
   }
 

@@ -538,7 +538,17 @@ export const StudioWorkspace: React.FC<StudioWorkspaceProps> = ({
             <span className="text-xs font-medium">
               Tap anywhere on the 3D floor to drop <strong>{placingFurniture.name}</strong>
             </span>
-            <button
+            <button type="button"
+              onClick={() => {
+                onAddPlacedFurniture(placingFurniture);
+                setPlacingFurniture(null);
+                setInteractionMode("move");
+              }}
+              className="text-[11px] text-[#FCD34D] underline cursor-pointer"
+            >
+              Place at default spot
+            </button>
+            <button type="button"
               onClick={() => setPlacingFurniture(null)}
               className="text-[11px] text-white/75 hover:text-white underline cursor-pointer shrink-0"
             >
